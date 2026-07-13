@@ -24,9 +24,6 @@ jobs:
       - name: Install Dependencies
         run: npm install --legacy-peer-deps
 
-      - name: Install React Native CLI
-        run: npm install --save-dev @react-native-community/cli @react-native-community/cli-platform-android --legacy-peer-deps
-
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -36,24 +33,32 @@ jobs:
       - name: Expo Prebuild Android Project
         run: npx expo prebuild --platform android
 
-      - name: Create Assets Directory
-        run: mkdir -p android/app/src/main/assets
-
-      - name: Bundle JavaScript into APK
+      - name: Embed JS Bundle into Android Assets
         run: |
-          npx react-native bundle \
+          mkdir -p android/app/src/main/assets
+          npx expo export:embed \
             --platform android \
-            --dev false \
             --entry-file index.js \
             --bundle-output android/app/src/main/assets/index.android.bundle \
-            --assets-dest android/app/src/main/res
+            --assets-dest android/app/src/main/res \
+            --dev false \
+            --minify true
 
-      - name: Remove Duplicate Resources
+      - name: Clean Duplicate Resources
         run: |
-          find android/app/src/main/res/drawable-* -type f -name "*.png" -delete 2>/dev/null || true
-          find android/app/src/main/res/raw -type f -name "*.json" -delete 2>/dev/null || true
+          # Remove any duplicated drawable resources to prevent AAPT merge errors
+          cd android/app/src/main/res
+          for dir in drawable-mdpi drawable-hdpi drawable-xhdpi drawable-xxhdpi drawable-xxxhdpi; do
+            if [ -d "$dir" ]; then
+              find "$dir" -type f \( -name "*.png" -o -name "*.jpg" \) -delete 2>/dev/null || true
+            fi
+          done
+          # Remove raw json duplicates
+          if [ -d "raw" ]; then
+            find raw -type f -name "*.json" -delete 2>/dev/null || true
+          fi
 
-      - name: Build Native Debug APK with Embedded Bundle
+      - name: Build Native Debug APK
         run: |
           cd android
           ./gradlew assembleDebug
@@ -65,7 +70,7 @@ jobs:
           name: JTC B2B App - Standalone APK
           body: |
             Fully standalone native Android APK for JTC Customer B2B portal.
-            JS bundle is embedded inside — no dev server needed.
+            JS bundle is embedded — no dev server needed.
             Just install and run.
           draft: false
           prerelease: false
