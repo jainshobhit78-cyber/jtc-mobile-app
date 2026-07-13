@@ -19,7 +19,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
 
       - name: Install Dependencies
         run: |
@@ -33,7 +33,7 @@ jobs:
 
       - name: Expo Prebuild Android Project
         run: |
-          npx expo prebuild --platform android --no-interactive
+          npx expo prebuild --platform android
 
       - name: Build Native Debug APK
         run: |
