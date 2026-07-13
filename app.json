@@ -18,6 +18,11 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       }
     },
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0E2344"
+    },
     "web": {
       "favicon": "./assets/favicon.png"
     },
