@@ -33,6 +33,17 @@ jobs:
       - name: Expo Prebuild Android Project
         run: npx expo prebuild --platform android
 
+      - name: Fix Splash Screen Resources
+        run: |
+          # Create a minimal 1x1 PNG for splashscreen_logo if referenced but missing
+          mkdir -p android/app/src/main/res/drawable
+          # Generate a tiny valid PNG (1x1 transparent pixel)
+          printf '\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\nIDATx\x9cc\x00\x01\x00\x00\x05\x00\x01\r\n\xb4\x00\x00\x00\x00IEND\xaeB`\x82' > android/app/src/main/res/drawable/splashscreen_logo.png
+          # Also create the splashscreen_background color if missing
+          if ! grep -q "splashscreen_background" android/app/src/main/res/values/colors.xml 2>/dev/null; then
+            sed -i 's|</resources>|    <color name="splashscreen_background">#0E2344</color>\n</resources>|' android/app/src/main/res/values/colors.xml
+          fi
+
       - name: Embed JS Bundle into Android Assets
         run: |
           mkdir -p android/app/src/main/assets
