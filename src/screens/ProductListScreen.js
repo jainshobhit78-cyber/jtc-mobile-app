@@ -1,301 +1,322 @@
-import React, { useContext, useState } from 'react';
-import { StyleSheet, Text, View, FlatList, TextInput, TouchableOpacity, SafeAreaView } from 'react-native';
+import React from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  StatusBar,
+  SafeAreaView,
+} from 'react-native';
+import { ArrowLeft, Heart, ArrowUpDown, SlidersHorizontal, Plus } from 'lucide-react-native';
 import { Theme } from '../styles/theme';
-import { StateContext } from '../context/StateContext';
-import { Search, SlidersHorizontal, ChevronLeft, Star } from 'lucide-react-native';
 
-export default function ProductListScreen({ route, navigation }) {
-  const { category } = route.params || { category: 'Wires & Cables' };
-  const { products } = useContext(StateContext);
+const PRODUCTS = [
+  {
+    id: '1',
+    name: 'KEI FR PVC Copper Wire 1.5 Sqmm Blue',
+    price: 1420.0,
+    unit: 'Roll',
+    stock: 250,
+    color: '#3B82F6',
+    initial: 'K',
+    brand: 'KEI',
+    sku: 'KEI-WR-1.5-BL',
+    category: 'Wires & Cables',
+    type: 'FR PVC',
+    size: '1.5 Sqmm',
+    length: '90m',
+    mrp: 1650.0,
+  },
+  {
+    id: '2',
+    name: 'KEI FR PVC Copper Wire 2.5 Sqmm Red',
+    price: 2450.0,
+    unit: 'Roll',
+    stock: 180,
+    color: '#EF4444',
+    initial: 'K',
+    brand: 'KEI',
+    sku: 'KEI-WR-2.5-RD',
+    category: 'Wires & Cables',
+    type: 'FR PVC',
+    size: '2.5 Sqmm',
+    length: '90m',
+    mrp: 2850.0,
+  },
+  {
+    id: '3',
+    name: 'Polycab Flexible Wire 1.5mm Yellow',
+    price: 1290.0,
+    unit: 'Roll',
+    stock: 350,
+    color: '#EAB308',
+    initial: 'P',
+    brand: 'Polycab',
+    sku: 'PC-FLX-1.5-YL',
+    category: 'Wires & Cables',
+    type: 'Flexible',
+    size: '1.5mm',
+    length: '90m',
+    mrp: 1490.0,
+  },
+  {
+    id: '4',
+    name: 'Polycab Flexible Wire 2.5mm Green',
+    price: 1740.0,
+    unit: 'Roll',
+    stock: 200,
+    color: '#22C55E',
+    initial: 'P',
+    brand: 'Polycab',
+    sku: 'PC-FLX-2.5-GR',
+    category: 'Wires & Cables',
+    type: 'Flexible',
+    size: '2.5mm',
+    length: '90m',
+    mrp: 2010.0,
+  },
+  {
+    id: '5',
+    name: 'Finolex FR Cable 4mm',
+    price: 3890.0,
+    unit: 'Roll',
+    stock: 120,
+    color: '#8B5CF6',
+    initial: 'F',
+    brand: 'Finolex',
+    sku: 'FN-FR-4.0',
+    category: 'Wires & Cables',
+    type: 'FR Cable',
+    size: '4mm',
+    length: '90m',
+    mrp: 4500.0,
+  },
+  {
+    id: '6',
+    name: 'Havells LifeLine 1mm',
+    price: 980.0,
+    unit: 'Roll',
+    stock: 400,
+    color: '#F97316',
+    initial: 'H',
+    brand: 'Havells',
+    sku: 'HV-LL-1.0',
+    category: 'Wires & Cables',
+    type: 'LifeLine',
+    size: '1mm',
+    length: '90m',
+    mrp: 1150.0,
+  },
+];
 
-  const [query, setQuery] = useState('');
-  const [activeBrand, setActiveBrand] = useState('All');
+const ProductCard = ({ item, onPress, onAddPress }) => (
+  <TouchableOpacity
+    style={styles.card}
+    activeOpacity={0.7}
+    onPress={() => onPress(item)}
+  >
+    <View style={[styles.cardImage, { backgroundColor: item.color + '18' }]}>
+      <Text style={[styles.cardInitial, { color: item.color }]}>{item.initial}</Text>
+    </View>
+    <View style={styles.cardBody}>
+      <Text style={styles.cardName} numberOfLines={2}>
+        {item.name}
+      </Text>
+      <Text style={styles.cardPrice}>
+        ₹ {item.price.toLocaleString('en-IN', { minimumFractionDigits: 2 })} / {item.unit}
+      </Text>
+      <View style={styles.cardFooter}>
+        <Text style={styles.cardStock}>In Stock: {item.stock} {item.unit}</Text>
+        <TouchableOpacity style={styles.addBtn} activeOpacity={0.7} onPress={onAddPress}>
+          <Text style={styles.addBtnText}>Add</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  </TouchableOpacity>
+);
 
-  // Filter products
-  const categoryProducts = products.filter(p => p.category === category);
-  
-  const uniqueBrands = ['All', ...new Set(categoryProducts.map(p => p.brand))];
+const ProductListScreen = ({ navigation, route }) => {
+  const categoryName = route?.params?.category || 'Wires & Cables';
 
-  const filteredProducts = categoryProducts.filter(p => {
-    const matchesSearch = p.name.toLowerCase().includes(query.toLowerCase()) || p.sku.toLowerCase().includes(query.toLowerCase());
-    const matchesBrand = activeBrand === 'All' || p.brand === activeBrand;
-    return matchesSearch && matchesBrand;
-  });
+  const handleProductPress = (product) => {
+    navigation.navigate('ProductDetails', { product });
+  };
+
+  const handleProductAdd = () => {
+    navigation.navigate('Cart');
+  };
+
+  const renderProduct = ({ item, index }) => (
+    <View
+      style={[
+        styles.cardWrapper,
+        index % 2 === 0 ? { paddingRight: 6 } : { paddingLeft: 6 },
+      ]}
+    >
+      <ProductCard item={item} onPress={handleProductPress} onAddPress={handleProductAdd} />
+    </View>
+  );
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Header bar */}
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="dark-content" backgroundColor={Theme.colors.white} />
+
+      {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <ChevronLeft size={20} color={Theme.colors.textDark} />
+        <TouchableOpacity
+          style={styles.headerBtn}
+          onPress={() => navigation.goBack()}
+          activeOpacity={0.7}
+        >
+          <ArrowLeft size={22} color={Theme.colors.textDark} />
         </TouchableOpacity>
-        <View style={styles.headerTitleContainer}>
-          <Text style={styles.headerTitle}>{category}</Text>
-          <Text style={styles.headerSubtitle}>{categoryProducts.length} items available</Text>
-        </View>
+        <Text style={styles.headerTitle}>{categoryName}</Text>
+        <TouchableOpacity style={styles.headerBtn} activeOpacity={0.7} onPress={() => navigation.navigate('Cart')}>
+          <Heart size={22} color={Theme.colors.textDark} />
+        </TouchableOpacity>
       </View>
 
-      {/* Search and Filters */}
-      <View style={styles.searchFilterContainer}>
-        <View style={styles.searchWrapper}>
-          <Search size={18} color={Theme.colors.textMuted} style={styles.searchIcon} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search items or SKUs..."
-            placeholderTextColor={Theme.colors.textLight}
-            value={query}
-            onChangeText={setQuery}
-          />
-        </View>
-        
-        {/* Brand Filter List */}
-        <FlatList
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          data={uniqueBrands}
-          renderItem={({ item }) => (
-            <TouchableOpacity 
-              style={[
-                styles.brandBtn, 
-                activeBrand === item && styles.brandBtnActive
-              ]}
-              onPress={() => setActiveBrand(item)}
-            >
-              <Text style={[
-                styles.brandBtnText, 
-                activeBrand === item && styles.brandBtnTextActive
-              ]}>{item}</Text>
-            </TouchableOpacity>
-          )}
-          keyExtractor={(item) => item}
-          contentContainerStyle={styles.brandFilterList}
-        />
+      {/* Sort + Filter Row */}
+      <View style={styles.filterRow}>
+        <TouchableOpacity style={styles.filterPill} activeOpacity={0.7}>
+          <ArrowUpDown size={14} color={Theme.colors.textDark} />
+          <Text style={styles.filterPillText}>Sort</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.filterPill} activeOpacity={0.7}>
+          <SlidersHorizontal size={14} color={Theme.colors.textDark} />
+          <Text style={styles.filterPillText}>Filter</Text>
+        </TouchableOpacity>
       </View>
 
-      {/* Products Grid List */}
+      {/* Product Grid */}
       <FlatList
-        data={filteredProducts}
+        data={PRODUCTS}
+        renderItem={renderProduct}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <TouchableOpacity 
-            style={styles.productCard}
-            onPress={() => navigation.navigate('ProductDetails', { productId: item.id })}
-            activeOpacity={0.8}
-          >
-            <View style={styles.productInfo}>
-              <View style={styles.brandBadge}>
-                <Text style={styles.brandText}>{item.brand}</Text>
-              </View>
-              <Text style={styles.productName}>{item.name}</Text>
-              <Text style={styles.skuText}>SKU: {item.sku}</Text>
-              
-              <View style={styles.ratingRow}>
-                <Star size={12} color={Theme.colors.accent} fill={Theme.colors.accent} />
-                <Text style={styles.ratingText}>{item.rating} ({item.unit})</Text>
-              </View>
-            </View>
-
-            <View style={styles.productAction}>
-              <Text style={styles.priceText}>₹{item.price.toLocaleString('en-IN')}</Text>
-              <View style={[
-                styles.stockBadge, 
-                item.stock > 20 ? styles.stockIn : styles.stockLow
-              ]}>
-                <Text style={[
-                  styles.stockText, 
-                  item.stock > 20 ? styles.stockTextIn : styles.stockTextLow
-                ]}>
-                  {item.stock > 20 ? 'In Stock' : `Low: ${item.stock}`}
-                </Text>
-              </View>
-            </View>
-          </TouchableOpacity>
-        )}
-        contentContainerStyle={styles.listContainer}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No products match your filters.</Text>
-          </View>
-        }
+        numColumns={2}
+        contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
       />
     </SafeAreaView>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
     backgroundColor: Theme.colors.bgMain,
   },
   header: {
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 16,
-    backgroundColor: Theme.colors.white,
-    borderBottomWidth: 1,
-    borderBottomColor: Theme.colors.border,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 16,
+    justifyContent: 'space-between',
+    backgroundColor: Theme.colors.white,
+    paddingHorizontal: Theme.spacing.lg,
+    paddingVertical: Theme.spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: Theme.colors.border,
   },
-  backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: Theme.colors.bgMain,
-    justifyContent: 'center',
+  headerBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: 'center',
-  },
-  headerTitleContainer: {
-    flex: 1,
+    justifyContent: 'center',
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: Theme.fontSize.lg,
+    fontFamily: Theme.fonts.headingSemiBold,
     color: Theme.colors.textDark,
+    flex: 1,
+    textAlign: 'center',
   },
-  headerSubtitle: {
-    fontSize: 11,
-    color: Theme.colors.textMuted,
-    marginTop: 2,
+  filterRow: {
+    flexDirection: 'row',
+    paddingHorizontal: Theme.spacing.lg,
+    paddingVertical: Theme.spacing.md,
+    gap: Theme.spacing.md,
+    backgroundColor: Theme.colors.bgMain,
   },
-  searchFilterContainer: {
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 12,
-    backgroundColor: Theme.colors.white,
-    borderBottomWidth: 1,
-    borderBottomColor: Theme.colors.border,
-    gap: 12,
-  },
-  searchWrapper: {
+  filterPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Theme.colors.bgMain,
-    borderRadius: Theme.radii.input,
-    height: 48,
-    paddingHorizontal: 16,
-  },
-  searchIcon: {
-    marginRight: 10,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 13,
-    color: Theme.colors.textDark,
-    fontWeight: '500',
-  },
-  brandFilterList: {
-    gap: 8,
-    paddingVertical: 4,
-  },
-  brandBtn: {
-    backgroundColor: Theme.colors.bgMain,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
+    paddingHorizontal: Theme.spacing.lg,
+    paddingVertical: Theme.spacing.sm,
+    borderRadius: Theme.radii.chip,
     borderWidth: 1,
     borderColor: Theme.colors.border,
+    backgroundColor: Theme.colors.white,
+    gap: 6,
   },
-  brandBtnActive: {
-    backgroundColor: Theme.colors.primary,
-    borderColor: Theme.colors.primary,
+  filterPillText: {
+    fontSize: Theme.fontSize.sm,
+    fontFamily: Theme.fonts.bodyMedium,
+    color: Theme.colors.textDark,
   },
-  brandBtnText: {
-    fontSize: 11,
-    fontWeight: 'bold',
-    color: Theme.colors.textMuted,
+  listContent: {
+    paddingHorizontal: Theme.spacing.lg,
+    paddingBottom: Theme.spacing.xxl,
   },
-  brandBtnTextActive: {
-    color: Theme.colors.white,
+  cardWrapper: {
+    flex: 1,
+    marginBottom: Theme.spacing.md,
   },
-  listContainer: {
-    padding: 24,
-    gap: 12,
-  },
-  productCard: {
+  card: {
     backgroundColor: Theme.colors.white,
     borderRadius: Theme.radii.card,
-    padding: 16,
     borderWidth: 1,
     borderColor: Theme.colors.border,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    overflow: 'hidden',
   },
-  productInfo: {
-    flex: 1,
-    marginRight: 12,
-    gap: 4,
+  cardImage: {
+    height: 120,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  brandBadge: {
-    backgroundColor: '#ECEFF1',
-    alignSelf: 'flex-start',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
+  cardInitial: {
+    fontSize: 36,
+    fontFamily: Theme.fonts.heading,
   },
-  brandText: {
-    fontSize: 9,
-    fontWeight: 'bold',
-    color: Theme.colors.textMuted,
+  cardBody: {
+    padding: Theme.spacing.md,
   },
-  productName: {
-    fontSize: 14,
-    fontWeight: 'bold',
+  cardName: {
+    fontSize: 13,
+    fontFamily: Theme.fonts.bodySemiBold,
     color: Theme.colors.textDark,
     lineHeight: 18,
+    marginBottom: 6,
+    minHeight: 36,
   },
-  skuText: {
-    fontSize: 11,
-    color: Theme.colors.textLight,
-    fontFamily: 'monospace',
+  cardPrice: {
+    fontSize: Theme.fontSize.md,
+    fontFamily: Theme.fonts.bodyBold,
+    color: Theme.colors.primary,
+    marginBottom: 6,
   },
-  ratingRow: {
+  cardFooter: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    marginTop: 4,
-  },
-  ratingText: {
-    fontSize: 11,
-    color: Theme.colors.textMuted,
-  },
-  productAction: {
-    alignItems: 'flex-end',
     justifyContent: 'space-between',
   },
-  priceText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: Theme.colors.primary,
-  },
-  stockBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  stockIn: {
-    backgroundColor: 'rgba(46, 125, 50, 0.1)',
-  },
-  stockLow: {
-    backgroundColor: 'rgba(211, 47, 47, 0.1)',
-  },
-  stockText: {
-    fontSize: 9,
-    fontWeight: 'bold',
-  },
-  stockTextIn: {
+  cardStock: {
+    fontSize: Theme.fontSize.xs,
+    fontFamily: Theme.fonts.bodyMedium,
     color: Theme.colors.success,
   },
-  stockTextLow: {
-    color: Theme.colors.error,
+  addBtn: {
+    borderWidth: 1.5,
+    borderColor: Theme.colors.primary,
+    borderRadius: Theme.radii.button,
+    paddingHorizontal: Theme.spacing.md,
+    paddingVertical: 4,
   },
-  emptyContainer: {
-    paddingVertical: 40,
-    alignItems: 'center',
+  addBtnText: {
+    fontSize: Theme.fontSize.sm,
+    fontFamily: Theme.fonts.bodySemiBold,
+    color: Theme.colors.primary,
   },
-  emptyText: {
-    fontSize: 13,
-    color: Theme.colors.textMuted,
-  }
 });
+
+export default ProductListScreen;

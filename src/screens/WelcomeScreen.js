@@ -1,171 +1,234 @@
 import React from 'react';
-import { StyleSheet, Text, View, Image, TouchableOpacity, SafeAreaView, StatusBar } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  SafeAreaView,
+  TouchableOpacity,
+  ActivityIndicator,
+  StatusBar,
+  ScrollView,
+} from 'react-native';
 import { Theme } from '../styles/theme';
-import { Zap, ShieldCheck } from 'lucide-react-native';
 
-export default function WelcomeScreen({ navigation }) {
+const WelcomeScreen = ({ navigation }) => {
+  const features = [
+    'Wide Range of Quality Products',
+    'Real-time Stock Availability & 24/7 Ordering',
+    'Book Stock & Get Instant Invoice',
+    'Track Orders & Manage Account Easily',
+  ];
+
+  const brandNames = ['Crompton', 'KEI', 'POLYCAB', 'Havells', 'Finolex'];
+
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={Theme.colors.primaryDark} />
-      
-      {/* Header Splash */}
-      <View style={styles.header}>
-        <View style={styles.logoContainer}>
-          <Zap size={36} color={Theme.colors.primary} strokeWidth={2.5} />
+      <StatusBar barStyle="dark-content" backgroundColor={Theme.colors.white} />
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Logo Section */}
+        <View style={styles.logoSection}>
+          <View style={styles.logoCircle}>
+            <Text style={styles.logoText}>JTC</Text>
+          </View>
+          <Text style={styles.companyName}>JAIN TRADING CORPORATION</Text>
         </View>
-        <Text style={styles.brandTitle}>JAIN TRADING</Text>
-        <Text style={styles.brandSubtitle}>ENTERPRISE B2B SYSTEM</Text>
-      </View>
 
-      {/* Center Graphics */}
-      <View style={styles.illustrations}>
-        <View style={styles.badgeContainer}>
-          <ShieldCheck size={20} color={Theme.colors.success} />
-          <Text style={styles.badgeText}>ERP Integrated & Secured</Text>
+        {/* Tagline */}
+        <Text style={styles.tagline}>Your Trusted Partner For All Your Needs</Text>
+
+        {/* Feature Bullets */}
+        <View style={styles.featuresContainer}>
+          {features.map((feature, index) => (
+            <View key={index} style={styles.featureRow}>
+              <View style={styles.featureDot} />
+              <Text style={styles.featureText}>{feature}</Text>
+            </View>
+          ))}
         </View>
-        <Text style={styles.headline}>Direct distribution & collection management at your fingertips.</Text>
-        <Text style={styles.subheadline}>Book bulk inventory items, view outstanding ledgers, and pay invoices instantly.</Text>
-      </View>
 
-      {/* Navigation Actions */}
-      <View style={styles.actions}>
-        <TouchableOpacity 
-          style={styles.primaryButton}
-          onPress={() => navigation.replace('Login', { role: 'customer' })}
+        {/* Brand Names */}
+        <View style={styles.brandsRow}>
+          {brandNames.map((brand, index) => (
+            <React.Fragment key={brand}>
+              <Text style={styles.brandName}>{brand}</Text>
+              {index < brandNames.length - 1 && (
+                <Text style={styles.brandSeparator}>•</Text>
+              )}
+            </React.Fragment>
+          ))}
+        </View>
+
+        {/* Loading */}
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="small" color={Theme.colors.primary} />
+          <Text style={styles.loadingText}>Loading Product Catalogue...</Text>
+        </View>
+
+        {/* Get Started Button */}
+        <TouchableOpacity
+          style={styles.getStartedButton}
           activeOpacity={0.8}
+          onPress={() => navigation.navigate('Login')}
         >
-          <Text style={styles.primaryButtonText}>Sign In as Dealer / Client</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={styles.secondaryButton}
-          onPress={() => navigation.replace('Login', { role: 'agent' })}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.secondaryButtonText}>Sign In as Field Agent</Text>
+          <Text style={styles.getStartedText}>Get Started</Text>
         </TouchableOpacity>
 
-        <Text style={styles.footerText}>Jain Trading Corporation © 2026</Text>
-      </View>
+        {/* Login Link */}
+        <TouchableOpacity
+          style={styles.loginLink}
+          activeOpacity={0.7}
+          onPress={() => navigation.navigate('Login')}
+        >
+          <Text style={styles.loginLinkText}>Log In to Your Account</Text>
+        </TouchableOpacity>
+
+        {/* Language Toggle */}
+        <TouchableOpacity style={styles.languageToggle} activeOpacity={0.7}>
+          <Text style={styles.languageText}>English 🌐</Text>
+        </TouchableOpacity>
+
+        {/* Footer */}
+        <Text style={styles.footer}>Powered by SATOSHI Entertainment Pvt. Ltd.</Text>
+      </ScrollView>
     </SafeAreaView>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0E2344', // Theme sidebar color
-    justifyContent: 'space-between',
+    backgroundColor: Theme.colors.white,
+  },
+  scrollContent: {
+    flexGrow: 1,
     paddingHorizontal: 24,
-    paddingVertical: 32,
-  },
-  header: {
+    paddingTop: 40,
+    paddingBottom: 24,
     alignItems: 'center',
-    marginTop: 60,
   },
-  logoContainer: {
+  logoSection: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  logoCircle: {
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: Theme.colors.white,
+    backgroundColor: Theme.colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 5,
-    marginBottom: 16,
+    marginBottom: 12,
   },
-  brandTitle: {
-    fontSize: 26,
+  logoText: {
+    fontSize: 24,
     fontWeight: 'bold',
     color: Theme.colors.white,
-    letterSpacing: 2,
+    letterSpacing: 1,
   },
-  brandSubtitle: {
-    fontSize: 10,
-    color: '#94A3B8',
-    letterSpacing: 3,
+  companyName: {
+    fontSize: 16,
     fontWeight: 'bold',
-    marginTop: 4,
+    color: Theme.colors.primaryDark,
+    letterSpacing: 1.5,
+    textAlign: 'center',
   },
-  illustrations: {
+  tagline: {
+    fontSize: 14,
+    color: Theme.colors.primary,
+    textAlign: 'center',
+    marginBottom: 24,
+    fontWeight: '500',
+  },
+  featuresContainer: {
+    alignSelf: 'stretch',
+    marginBottom: 20,
+    paddingHorizontal: 8,
+  },
+  featureRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 10,
+  },
+  featureDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: Theme.colors.primary,
+    marginTop: 5,
+    marginRight: 12,
+  },
+  featureText: {
+    fontSize: 13,
+    color: Theme.colors.textDark,
+    flex: 1,
+    lineHeight: 18,
+  },
+  brandsRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
-    marginVertical: 40,
+    flexWrap: 'wrap',
+    marginBottom: 20,
   },
-  badgeContainer: {
+  brandName: {
+    fontSize: 11,
+    color: Theme.colors.textLight,
+    fontWeight: '500',
+    letterSpacing: 0.3,
+  },
+  brandSeparator: {
+    fontSize: 11,
+    color: Theme.colors.textLight,
+    marginHorizontal: 6,
+  },
+  loadingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(46, 125, 50, 0.15)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(46, 125, 50, 0.25)',
+    justifyContent: 'center',
+    marginBottom: 24,
   },
-  badgeText: {
-    fontSize: 11,
-    fontWeight: 'bold',
-    color: '#81C784',
-    marginLeft: 6,
+  loadingText: {
+    fontSize: 12,
+    color: Theme.colors.textMuted,
+    marginLeft: 8,
   },
-  headline: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: Theme.colors.white,
-    textAlign: 'center',
-    lineHeight: 28,
-  },
-  subheadline: {
-    fontSize: 13,
-    color: '#94A3B8',
-    textAlign: 'center',
-    lineHeight: 20,
-    marginTop: 12,
-    paddingHorizontal: 16,
-  },
-  actions: {
-    gap: 14,
-    marginBottom: 20,
-  },
-  primaryButton: {
+  getStartedButton: {
+    width: '100%',
+    height: 50,
     backgroundColor: Theme.colors.primary,
-    height: Theme.heights.button,
     borderRadius: Theme.radii.button,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: Theme.colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 4,
+    marginBottom: 16,
   },
-  primaryButtonText: {
+  getStartedText: {
+    fontSize: 16,
+    fontWeight: '600',
     color: Theme.colors.white,
-    fontSize: 15,
-    fontWeight: 'bold',
   },
-  secondaryButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.15)',
-    height: Theme.heights.button,
-    borderRadius: Theme.radii.button,
-    justifyContent: 'center',
-    alignItems: 'center',
+  loginLink: {
+    marginBottom: 20,
   },
-  secondaryButtonText: {
-    color: Theme.colors.white,
-    fontSize: 15,
-    fontWeight: 'bold',
+  loginLinkText: {
+    fontSize: 14,
+    color: Theme.colors.primary,
+    fontWeight: '500',
   },
-  footerText: {
-    textAlign: 'center',
-    color: '#475569',
+  languageToggle: {
+    marginBottom: 16,
+  },
+  languageText: {
+    fontSize: 13,
+    color: Theme.colors.textMuted,
+  },
+  footer: {
     fontSize: 10,
-    marginTop: 16,
-    letterSpacing: 0.5,
-  }
+    color: Theme.colors.textLight,
+    textAlign: 'center',
+  },
 });
+
+export default WelcomeScreen;

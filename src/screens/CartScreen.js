@@ -1,413 +1,381 @@
-import React, { useContext, useState } from 'react';
-import { StyleSheet, Text, View, FlatList, TouchableOpacity, TextInput, SafeAreaView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  StatusBar,
+  SafeAreaView,
+} from 'react-native';
+import { ArrowLeft, Heart, Minus, Plus, Trash2 } from 'lucide-react-native';
 import { Theme } from '../styles/theme';
-import { StateContext } from '../context/StateContext';
-import { ChevronLeft, Trash2, Plus, Minus, AlertTriangle, CheckCircle } from 'lucide-react-native';
 
-export default function CartScreen({ navigation }) {
-  const { cart, user, updateCartQty, removeFromCart, placeOrder } = useContext(StateContext);
-  const [remarks, setRemarks] = useState('');
+const INITIAL_CART = [
+  {
+    id: '1',
+    name: 'KEI FR PVC Copper Wire 1.5 Sqmm Blue',
+    specs: '1.5 Sqmm · FR PVC · 90m',
+    unitPrice: 1420.0,
+    price: 7100.0,
+    unit: 'Roll',
+    qty: 2,
+    color: '#3B82F6',
+    initial: 'K',
+  },
+  {
+    id: '2',
+    name: 'KEI FR PVC Copper Wire 2.5 Sqmm Red',
+    specs: '2.5 Sqmm · FR PVC · 90m',
+    unitPrice: 2450.0,
+    price: 2450.0,
+    unit: 'Roll',
+    qty: 1,
+    color: '#EF4444',
+    initial: 'K',
+  },
+  {
+    id: '3',
+    name: 'Polycab Flexible Wire 1.5mm Yellow',
+    specs: '1.5mm · Flexible · 90m',
+    unitPrice: 870.0,
+    price: 2610.0,
+    unit: 'Roll',
+    qty: 3,
+    color: '#EAB308',
+    initial: 'P',
+  },
+];
 
-  const totalValue = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-  const availableCredit = user.creditLimit - user.outstanding;
-  
-  const isCreditBlocked = totalValue > availableCredit;
+const CartScreen = ({ navigation }) => {
+  const [cartItems, setCartItems] = useState(INITIAL_CART);
 
-  const handleCheckout = () => {
-    if (cart.length === 0) {
-      Alert.alert("Empty Cart", "Please add items to your cart first.");
-      return;
-    }
-
-    if (isCreditBlocked) {
-      Alert.alert("Credit Limit Blocked", "Your current outstanding balance + cart value exceeds your credit limit. Please clear pending invoices first.");
-      return;
-    }
-
-    const order = placeOrder(remarks);
-    Alert.alert(
-      "Booking Confirmed",
-      `Order ${order.id} placed successfully and synced with ERP.`,
-      [
-        { 
-          text: "View Timeline", 
-          onPress: () => {
-            navigation.navigate('Timeline');
-          } 
-        },
-        { 
-          text: "Back to Home", 
-          onPress: () => navigation.popToTop() 
+  const updateQty = (id, delta) => {
+    setCartItems((items) =>
+      items.map((item) => {
+        if (item.id === id) {
+          const newQty = Math.max(1, item.qty + delta);
+          return {
+            ...item,
+            qty: newQty,
+            price: item.unitPrice * newQty,
+          };
         }
-      ]
+        return item;
+      })
     );
   };
 
-  return (
-    <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView 
-        style={{ flex: 1 }} 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-            <ChevronLeft size={20} color={Theme.colors.textDark} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>B2B Booking Cart</Text>
-          <View style={{ width: 40 }} />
+  const removeItem = (id) => {
+    setCartItems((items) => items.filter((item) => item.id !== id));
+  };
+
+  const subtotal = cartItems.reduce((sum, item) => sum + item.price, 0);
+  const gst = subtotal * 0.18;
+  const total = subtotal + gst;
+  const totalItems = cartItems.reduce((sum, item) => sum + item.qty, 0);
+
+  const formatCurrency = (val) =>
+    '₹ ' + val.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+
+  const renderCartItem = ({ item }) => (
+    <View style={styles.cartCard}>
+      <View style={styles.cartCardInner}>
+        {/* Product Thumbnail */}
+        <View style={[styles.thumb, { backgroundColor: item.color + '18' }]}>
+          <Text style={[styles.thumbInitial, { color: item.color }]}>
+            {item.initial}
+          </Text>
         </View>
 
-        {/* Cart list */}
-        <FlatList
-          data={cart}
-          keyExtractor={(item) => item.productId}
-          renderItem={({ item }) => (
-            <View style={styles.itemRow}>
-              <View style={styles.itemInfo}>
-                <Text style={styles.itemName}>{item.name}</Text>
-                <Text style={styles.itemPrice}>₹{item.price.toLocaleString('en-IN')} per unit</Text>
-              </View>
-              
-              <View style={styles.itemActions}>
-                <View style={styles.stepper}>
-                  <TouchableOpacity 
-                    style={styles.stepBtn}
-                    onPress={() => updateCartQty(item.productId, item.qty - 1)}
-                  >
-                    <Minus size={14} color={Theme.colors.textDark} />
-                  </TouchableOpacity>
-                  <Text style={styles.qtyText}>{item.qty}</Text>
-                  <TouchableOpacity 
-                    style={styles.stepBtn}
-                    onPress={() => updateCartQty(item.productId, item.qty + 1)}
-                  >
-                    <Plus size={14} color={Theme.colors.textDark} />
-                  </TouchableOpacity>
-                </View>
-                
-                <TouchableOpacity onPress={() => removeFromCart(item.productId)} style={styles.trashBtn}>
-                  <Trash2 size={16} color={Theme.colors.error} />
-                </TouchableOpacity>
-              </View>
-            </View>
-          )}
-          contentContainerStyle={styles.listContainer}
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>No items inside booking cart.</Text>
-            </View>
-          }
-          ListFooterComponent={
-            cart.length > 0 ? (
-              <View style={styles.footer}>
-                
-                {/* Remarks Input */}
-                <View style={styles.remarksContainer}>
-                  <Text style={styles.remarksLabel}>Special Shipping Instructions / Remarks</Text>
-                  <TextInput
-                    style={styles.remarksInput}
-                    placeholder="e.g., Deliver at warehouse back door..."
-                    value={remarks}
-                    onChangeText={setRemarks}
-                    multiline
-                  />
-                </View>
+        {/* Product Info */}
+        <View style={styles.cartInfo}>
+          <Text style={styles.cartItemName} numberOfLines={2}>
+            {item.name}
+          </Text>
+          <Text style={styles.cartItemSpecs}>{item.specs}</Text>
+          <Text style={styles.cartItemPrice}>
+            {formatCurrency(item.unitPrice)} / {item.unit}
+          </Text>
+        </View>
 
-                {/* Bill details */}
-                <View style={styles.billCard}>
-                  <Text style={styles.billTitle}>Order Valuation</Text>
-                  <View style={styles.billRow}>
-                    <Text style={styles.billLabel}>Cart Items Value</Text>
-                    <Text style={styles.billValue}>₹{totalValue.toLocaleString('en-IN')}</Text>
-                  </View>
-                  <View style={styles.billRow}>
-                    <Text style={styles.billLabel}>GST (Inclusive)</Text>
-                    <Text style={styles.billValue}>₹0.00</Text>
-                  </View>
-                  <View style={styles.divider} />
-                  <View style={styles.billRowTotal}>
-                    <Text style={styles.billLabelTotal}>Net Payable Dues</Text>
-                    <Text style={styles.billValueTotal}>₹{totalValue.toLocaleString('en-IN')}</Text>
-                  </View>
-                </View>
-
-                {/* Credit Limit Verification Box */}
-                <View style={[
-                  styles.creditBox, 
-                  isCreditBlocked ? styles.creditBlocked : styles.creditClear
-                ]}>
-                  {isCreditBlocked ? (
-                    <>
-                      <View style={styles.creditHeader}>
-                        <AlertTriangle size={18} color={Theme.colors.error} />
-                        <Text style={[styles.creditBoxTitle, { color: Theme.colors.error }]}>CREDIT BLOCK TRIGGERED</Text>
-                      </View>
-                      <Text style={styles.creditBoxDesc}>
-                        Your available credit limit of <Text style={{ fontWeight: 'bold' }}>₹{availableCredit.toLocaleString('en-IN')}</Text> is insufficient to book this order. Please clear outstanding ledger balances.
-                      </Text>
-                    </>
-                  ) : (
-                    <>
-                      <View style={styles.creditHeader}>
-                        <CheckCircle size={18} color={Theme.colors.success} />
-                        <Text style={[styles.creditBoxTitle, { color: Theme.colors.success }]}>CREDIT LIMIT APPROVED</Text>
-                      </View>
-                      <Text style={styles.creditBoxDesc}>
-                        Available Credit Limit: <Text style={{ fontWeight: 'bold', color: Theme.colors.success }}>₹{availableCredit.toLocaleString('en-IN')}</Text>. Order booking verified with SAP S/4HANA ERP.
-                      </Text>
-                    </>
-                  )}
-                </View>
-              </View>
-            ) : null
-          }
-        />
-
-        {/* Bottom checkout bar */}
-        {cart.length > 0 && (
-          <View style={styles.bottomBar}>
-            <TouchableOpacity 
-              style={[
-                styles.checkoutBtn, 
-                isCreditBlocked && styles.checkoutBlocked
-              ]}
-              onPress={handleCheckout}
-              disabled={isCreditBlocked}
+        {/* Right: Stepper + Subtotal + Delete */}
+        <View style={styles.cartRight}>
+          <View style={styles.stepperSmall}>
+            <TouchableOpacity
+              style={styles.stepperSmallBtn}
+              onPress={() => updateQty(item.id, -1)}
+              activeOpacity={0.7}
             >
-              <Text style={styles.checkoutBtnText}>Confirm Order Booking</Text>
+              <Minus size={12} color={Theme.colors.primary} />
+            </TouchableOpacity>
+            <View style={styles.stepperSmallValue}>
+              <Text style={styles.stepperSmallText}>{item.qty}</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.stepperSmallBtn}
+              onPress={() => updateQty(item.id, 1)}
+              activeOpacity={0.7}
+            >
+              <Plus size={12} color={Theme.colors.primary} />
             </TouchableOpacity>
           </View>
-        )}
-      </KeyboardAvoidingView>
+          <Text style={styles.cartSubtotal}>{formatCurrency(item.price)}</Text>
+          <TouchableOpacity
+            onPress={() => removeItem(item.id)}
+            activeOpacity={0.7}
+            style={styles.trashBtn}
+          >
+            <Trash2 size={16} color={Theme.colors.error} />
+          </TouchableOpacity>
+        </View>
+      </View>
+    </View>
+  );
+
+  const ListFooter = () => (
+    <View style={styles.summaryCard}>
+      <View style={styles.summaryRow}>
+        <Text style={styles.summaryLabel}>Subtotal</Text>
+        <Text style={styles.summaryValue}>{formatCurrency(subtotal)}</Text>
+      </View>
+      <View style={styles.summaryRow}>
+        <Text style={styles.summaryLabel}>GST (18%)</Text>
+        <Text style={styles.summaryValue}>{formatCurrency(gst)}</Text>
+      </View>
+      <View style={styles.summaryDivider} />
+      <View style={styles.summaryRow}>
+        <Text style={styles.totalLabel}>Total</Text>
+        <Text style={styles.totalValue}>{formatCurrency(total)}</Text>
+      </View>
+    </View>
+  );
+
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="dark-content" backgroundColor={Theme.colors.white} />
+
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.headerBtn}
+          onPress={() => navigation.goBack()}
+          activeOpacity={0.7}
+        >
+          <ArrowLeft size={22} color={Theme.colors.textDark} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>My Cart ({totalItems})</Text>
+        <TouchableOpacity style={styles.headerBtn} activeOpacity={0.7}>
+          <Heart size={22} color={Theme.colors.textDark} />
+        </TouchableOpacity>
+      </View>
+
+      {/* Cart Items */}
+      <FlatList
+        data={cartItems}
+        renderItem={renderCartItem}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
+        ListFooterComponent={ListFooter}
+      />
+
+      {/* Bottom Checkout */}
+      <View style={styles.bottomBar}>
+        <TouchableOpacity 
+          style={styles.checkoutBtn} 
+          activeOpacity={0.7}
+          onPress={() => navigation.navigate('BookingConfirmation', { amount: formatCurrency(total) })}
+        >
+          <Text style={styles.checkoutBtnText}>Proceed to Checkout</Text>
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
     backgroundColor: Theme.colors.bgMain,
   },
   header: {
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     backgroundColor: Theme.colors.white,
+    paddingHorizontal: Theme.spacing.lg,
+    paddingVertical: Theme.spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: Theme.colors.border,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
   },
-  backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: Theme.colors.bgMain,
-    justifyContent: 'center',
+  headerBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   headerTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: Theme.fontSize.lg,
+    fontFamily: Theme.fonts.headingSemiBold,
     color: Theme.colors.textDark,
-    fontFamily: 'Poppins-Bold',
-  },
-  listContainer: {
-    padding: 24,
-    gap: 12,
-  },
-  itemRow: {
-    backgroundColor: Theme.colors.white,
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: Theme.colors.border,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  itemInfo: {
     flex: 1,
-    marginRight: 12,
+    textAlign: 'center',
   },
-  itemName: {
-    fontSize: 13,
-    fontWeight: 'bold',
-    color: Theme.colors.textDark,
-    lineHeight: 18,
+  listContent: {
+    padding: Theme.spacing.lg,
+    paddingBottom: 100,
   },
-  itemPrice: {
-    fontSize: 11,
-    color: Theme.colors.textMuted,
-    marginTop: 4,
-  },
-  itemActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  stepper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Theme.colors.bgMain,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: Theme.colors.border,
-    overflow: 'hidden',
-  },
-  stepBtn: {
-    width: 32,
-    height: 32,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  qtyText: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: Theme.colors.textDark,
-    paddingHorizontal: 8,
-  },
-  trashBtn: {
-    padding: 8,
-  },
-  emptyContainer: {
-    paddingVertical: 80,
-    alignItems: 'center',
-  },
-  emptyText: {
-    color: Theme.colors.textMuted,
-    fontSize: 13,
-  },
-  footer: {
-    marginTop: 16,
-    gap: 16,
-    paddingBottom: 80,
-  },
-  remarksContainer: {
-    gap: 8,
-  },
-  remarksLabel: {
-    fontSize: 11,
-    fontWeight: 'bold',
-    color: Theme.colors.textMuted,
-    textTransform: 'uppercase',
-  },
-  remarksInput: {
-    backgroundColor: Theme.colors.white,
-    borderWidth: 1,
-    borderColor: Theme.colors.border,
-    borderRadius: 12,
-    padding: 12,
-    height: 64,
-    textAlignVertical: 'top',
-    fontSize: 12,
-    color: Theme.colors.textDark,
-  },
-  billCard: {
+  cartCard: {
     backgroundColor: Theme.colors.white,
     borderRadius: Theme.radii.card,
-    padding: 18,
+    padding: Theme.spacing.md,
+    marginBottom: Theme.spacing.md,
     borderWidth: 1,
     borderColor: Theme.colors.border,
   },
-  billTitle: {
-    fontSize: 12,
-    fontWeight: 'bold',
+  cartCardInner: {
+    flexDirection: 'row',
+  },
+  thumb: {
+    width: 60,
+    height: 60,
+    borderRadius: Theme.radii.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  thumbInitial: {
+    fontSize: 24,
+    fontFamily: Theme.fonts.heading,
+  },
+  cartInfo: {
+    flex: 1,
+    marginLeft: Theme.spacing.md,
+    marginRight: Theme.spacing.sm,
+    justifyContent: 'center',
+  },
+  cartItemName: {
+    fontSize: 13,
+    fontFamily: Theme.fonts.bodySemiBold,
     color: Theme.colors.textDark,
-    textTransform: 'uppercase',
-    marginBottom: 12,
+    lineHeight: 18,
+    marginBottom: 2,
   },
-  billRow: {
+  cartItemSpecs: {
+    fontSize: Theme.fontSize.xs,
+    fontFamily: Theme.fonts.body,
+    color: Theme.colors.textMuted,
+    marginBottom: 4,
+  },
+  cartItemPrice: {
+    fontSize: Theme.fontSize.sm,
+    fontFamily: Theme.fonts.bodyBold,
+    color: Theme.colors.primary,
+  },
+  cartRight: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+  },
+  stepperSmall: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Theme.colors.border,
+    borderRadius: Theme.radii.sm,
+    overflow: 'hidden',
+  },
+  stepperSmallBtn: {
+    width: 28,
+    height: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Theme.colors.bgMain,
+  },
+  stepperSmallValue: {
+    width: 28,
+    height: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Theme.colors.white,
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
+    borderColor: Theme.colors.border,
+  },
+  stepperSmallText: {
+    fontSize: Theme.fontSize.sm,
+    fontFamily: Theme.fonts.bodySemiBold,
+    color: Theme.colors.textDark,
+  },
+  cartSubtotal: {
+    fontSize: Theme.fontSize.sm,
+    fontFamily: Theme.fonts.bodyBold,
+    color: Theme.colors.textDark,
+  },
+  trashBtn: {
+    padding: 4,
+  },
+  summaryCard: {
+    backgroundColor: Theme.colors.white,
+    borderRadius: Theme.radii.card,
+    padding: Theme.spacing.lg,
+    borderWidth: 1,
+    borderColor: Theme.colors.border,
+    marginTop: Theme.spacing.sm,
+  },
+  summaryRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    alignItems: 'center',
+    paddingVertical: Theme.spacing.sm,
   },
-  billRowTotal: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 8,
-  },
-  billLabel: {
-    fontSize: 12,
+  summaryLabel: {
+    fontSize: Theme.fontSize.md,
+    fontFamily: Theme.fonts.body,
     color: Theme.colors.textMuted,
   },
-  billValue: {
-    fontSize: 12,
-    fontWeight: 'bold',
+  summaryValue: {
+    fontSize: Theme.fontSize.md,
+    fontFamily: Theme.fonts.bodyMedium,
     color: Theme.colors.textDark,
-    fontFamily: 'monospace',
   },
-  divider: {
+  summaryDivider: {
     height: 1,
     backgroundColor: Theme.colors.border,
-    marginVertical: 4,
+    marginVertical: Theme.spacing.sm,
   },
-  billLabelTotal: {
-    fontSize: 13,
-    fontWeight: 'bold',
+  totalLabel: {
+    fontSize: Theme.fontSize.lg,
+    fontFamily: Theme.fonts.bodyBold,
     color: Theme.colors.textDark,
   },
-  billValueTotal: {
-    fontSize: 15,
-    fontWeight: 'bold',
+  totalValue: {
+    fontSize: Theme.fontSize.xl,
+    fontFamily: Theme.fonts.bodyBold,
     color: Theme.colors.primary,
-    fontFamily: 'monospace',
-  },
-  creditBox: {
-    borderRadius: 16,
-    padding: 16,
-    gap: 8,
-  },
-  creditBlocked: {
-    backgroundColor: 'rgba(211, 47, 47, 0.08)',
-    borderWidth: 1,
-    borderColor: 'rgba(211, 47, 47, 0.25)',
-  },
-  creditClear: {
-    backgroundColor: 'rgba(46, 125, 50, 0.08)',
-    borderWidth: 1,
-    borderColor: 'rgba(46, 125, 50, 0.25)',
-  },
-  creditHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  creditBoxTitle: {
-    fontSize: 11,
-    fontWeight: 'bold',
-    letterSpacing: 0.5,
-  },
-  creditBoxDesc: {
-    fontSize: 11,
-    color: Theme.colors.textMuted,
-    lineHeight: 16,
   },
   bottomBar: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
     backgroundColor: Theme.colors.white,
-    padding: 16,
+    paddingHorizontal: Theme.spacing.lg,
+    paddingVertical: Theme.spacing.lg,
     borderTopWidth: 1,
     borderTopColor: Theme.colors.border,
+    ...Theme.shadows.cardMd,
   },
   checkoutBtn: {
-    backgroundColor: Theme.colors.primary,
-    height: 52,
+    height: 50,
     borderRadius: Theme.radii.button,
-    justifyContent: 'center',
+    backgroundColor: Theme.colors.primary,
     alignItems: 'center',
-  },
-  checkoutBlocked: {
-    backgroundColor: Theme.colors.textLight,
+    justifyContent: 'center',
+    ...Theme.shadows.button,
   },
   checkoutBtnText: {
-    color: Theme.colors.white,
-    fontSize: 15,
-    fontWeight: 'bold',
-  }
+    fontSize: Theme.fontSize.lg,
+    fontFamily: Theme.fonts.bodySemiBold,
+    color: Theme.colors.textWhite,
+  },
 });
+
+export default CartScreen;

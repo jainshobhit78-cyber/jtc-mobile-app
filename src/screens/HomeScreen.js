@@ -1,454 +1,520 @@
-import React, { useContext } from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, SafeAreaView, Dimensions, FlatList } from 'react-native';
+import React from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Dimensions,
+} from 'react-native';
+import {
+  Menu,
+  Bell,
+  IndianRupee,
+  ShoppingBag,
+  FileText,
+  TrendingUp,
+  AlertCircle,
+  ShoppingCart,
+  Package,
+  CreditCard,
+  Tag,
+  Wallet,
+  BarChart3,
+} from 'lucide-react-native';
 import { Theme } from '../styles/theme';
-import { StateContext } from '../context/StateContext';
-import { ShoppingCart, Wallet, CreditCard, ChevronRight, Zap, Gift, ArrowRight } from 'lucide-react-native';
 
 const { width } = Dimensions.get('window');
 
-const categories = [
-  { name: "Wires & Cables", icon: "cable", color: '#E3F2FD', textColor: '#0D47A1' },
-  { name: "Electrical & Fans", icon: "fan", color: '#FFF3E0', textColor: '#E65100' },
-  { name: "Pumps & Motors", icon: "pump", color: '#E8F5E9', textColor: '#1B5E20' },
-  { name: "Solar Solutions", icon: "solar", color: '#FFFDE7', textColor: '#F57F17' },
-  { name: "Switchgears", icon: "switch", color: '#F3E5F5', textColor: '#4A148C' },
-  { name: "Accessories", icon: "grid", color: '#ECEFF1', textColor: '#37474F' }
-];
+const COLORS = {
+  primary: '#1B3A7C',
+  primaryDark: '#0E2344',
+  primaryLight: '#2D5BB9',
+  accent: '#F5851F',
+  bgMain: '#F5F7FA',
+  white: '#FFFFFF',
+  textDark: '#1A1A2E',
+  textMuted: '#6B7280',
+  border: '#E5E7EB',
+  success: '#16A34A',
+};
 
-const schemes = [
-  { id: '1', title: 'Monsoon Wire Bonanza', desc: 'Book 50 coils of KEI 1.5/2.5 sqmm & get 2 coils free!', validity: 'Till 31st July' },
-  { id: '2', title: 'Solar Dealer Lift', desc: 'Extra 2% cash discount on booking UTL 330W Panels above ₹1L.', validity: 'Till 20th July' }
-];
+const HomeScreen = ({ navigation }) => {
+  const statsCards = [
+    {
+      icon: IndianRupee,
+      amount: '₹ 1,24,560.00',
+      label: 'Outstanding Amount',
+      borderColor: COLORS.accent,
+    },
+    {
+      icon: IndianRupee,
+      amount: '₹ 6,00,000.00',
+      label: 'Credit Available',
+      borderColor: COLORS.success,
+    },
+    {
+      icon: IndianRupee,
+      amount: '₹ 3,75,440.00',
+      label: 'Available Credit',
+      borderColor: COLORS.primaryLight,
+    },
+  ];
 
-const brands = ['KEI Wires', 'Polycab', 'Crompton', 'Havells', 'Kirloskar', 'L&T', 'UTL Solar', 'Luminous'];
+  const quickStats = [
+    {
+      icon: ShoppingBag,
+      label: 'Pending Orders',
+      value: '12',
+      color: '#3B82F6',
+      bgColor: '#EFF6FF',
+    },
+    {
+      icon: FileText,
+      label: 'Pending Invoices',
+      value: '5',
+      color: '#F59E0B',
+      bgColor: '#FFFBEB',
+    },
+    {
+      icon: TrendingUp,
+      label: 'Monthly Sales',
+      value: '₹86,430',
+      color: '#10B981',
+      bgColor: '#ECFDF5',
+    },
+    {
+      icon: AlertCircle,
+      label: 'Collection Due',
+      value: '₹24,560',
+      color: '#EF4444',
+      bgColor: '#FEF2F2',
+    },
+  ];
 
-export default function HomeScreen({ navigation }) {
-  const { user, cart } = useContext(StateContext);
+  const quickActions = [
+    {
+      icon: ShoppingCart,
+      label: 'Place Order',
+      color: '#3B82F6',
+      onPress: () => navigation.navigate('Categories'),
+    },
+    {
+      icon: Package,
+      label: 'Book Back',
+      color: '#16A34A',
+      onPress: () => navigation.navigate('Categories'),
+    },
+    {
+      icon: CreditCard,
+      label: 'Payments',
+      color: '#F5851F',
+      onPress: () => navigation.navigate('Payments'),
+    },
+    {
+      icon: Tag,
+      label: 'Schemes',
+      color: '#8B5CF6',
+      onPress: () => navigation.navigate('Support'),
+    },
+    {
+      icon: Wallet,
+      label: 'Collections',
+      color: '#14B8A6',
+      onPress: () => navigation.navigate('Invoices'),
+    },
+    {
+      icon: BarChart3,
+      label: 'Reports',
+      color: '#EF4444',
+      onPress: () => navigation.navigate('AccountSummary'),
+    },
+  ];
 
-  const availableCredit = user.creditLimit - user.outstanding;
-  const creditUsagePercent = (user.outstanding / user.creditLimit) * 100;
-
-  const totalCartQty = cart.reduce((sum, item) => sum + item.qty, 0);
+  const brands = ['KEI', 'POLYCAB', 'Crompton', 'Havells', 'Finolex', 'Anchor'];
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Header bar */}
+    <View style={styles.container}>
+      {/* Header Bar */}
       <View style={styles.header}>
-        <View>
-          <Text style={styles.welcomeText}>Welcome back,</Text>
-          <Text style={styles.dealerName}>{user.name}</Text>
-          <View style={styles.codeBadge}>
-            <Text style={styles.codeText}>DEALER CODE: {user.code}</Text>
+        <TouchableOpacity style={styles.headerIconBtn} onPress={() => navigation.navigate('Profile')}>
+          <Menu size={24} color={COLORS.textDark} />
+        </TouchableOpacity>
+
+        <View style={styles.headerCenter}>
+          <View style={styles.logoCircle}>
+            <Text style={styles.logoText}>J</Text>
+          </View>
+          <View style={styles.headerTitleGroup}>
+            <Text style={styles.headerTitle}>JAIN TRADING</Text>
+            <Text style={styles.headerSubtitle}>CORPORATION</Text>
           </View>
         </View>
-        <TouchableOpacity 
-          style={styles.cartButton}
-          onPress={() => navigation.navigate('Cart')}
-        >
-          <ShoppingCart size={22} color={Theme.colors.white} />
-          {totalCartQty > 0 && (
-            <View style={styles.cartBadge}>
-              <Text style={styles.cartBadgeText}>{totalCartQty}</Text>
-            </View>
-          )}
+
+        <TouchableOpacity style={styles.headerIconBtn} onPress={() => navigation.navigate('Notifications')}>
+          <Bell size={24} color={COLORS.textDark} />
+          <View style={styles.notifBadge}>
+            <Text style={styles.notifBadgeText}>5</Text>
+          </View>
         </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollBody} showsVerticalScrollIndicator={false}>
-        
-        {/* KPI Balance Summary Cards */}
-        <View style={styles.kpiContainer}>
-          {/* Outstanding Card */}
-          <View style={[styles.kpiCard, styles.outstandingCard]}>
-            <View style={styles.kpiHeader}>
-              <View style={styles.kpiIconWrapper}>
-                <Wallet size={18} color={Theme.colors.error} />
-              </View>
-              <Text style={styles.kpiLabel}>Outstanding Balance</Text>
-            </View>
-            <Text style={styles.kpiValue}>₹{user.outstanding.toLocaleString('en-IN')}</Text>
-            
-            <View style={styles.progressBarBg}>
-              <View style={[styles.progressBarFill, { width: `${Math.min(100, creditUsagePercent)}%` }]} />
-            </View>
-            <View style={styles.kpiFooter}>
-              <Text style={styles.creditLimitText}>Limit: ₹{user.creditLimit.toLocaleString('en-IN')}</Text>
-              <TouchableOpacity onPress={() => navigation.navigate('Billing')}>
-                <Text style={styles.payLink}>Pay Ledger →</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          {/* Available Credit Card */}
-          <View style={[styles.kpiCard, styles.creditCard]}>
-            <View style={styles.kpiHeader}>
-              <View style={[styles.kpiIconWrapper, { backgroundColor: 'rgba(46, 125, 50, 0.1)' }]}>
-                <CreditCard size={18} color={Theme.colors.success} />
-              </View>
-              <Text style={styles.kpiLabel}>Available Credit Limit</Text>
-            </View>
-            <Text style={[styles.kpiValue, { color: Theme.colors.success }]}>
-              ₹{availableCredit.toLocaleString('en-IN')}
-            </Text>
-            <Text style={styles.kpiSubText}>Reconciled with SAP S/4HANA</Text>
-          </View>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Greeting Card */}
+        <View style={styles.greetingCard}>
+          <TouchableOpacity style={styles.greetingLeft} onPress={() => navigation.navigate('AccountSummary')}>
+            <Text style={styles.greetingLabel}>Good Morning,</Text>
+            <Text style={styles.greetingName}>Sharma Electricals ✨</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.avatar} onPress={() => navigation.navigate('Profile')}>
+            <Text style={styles.avatarText}>SE</Text>
+          </TouchableOpacity>
         </View>
 
-        {/* Schemes Section */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Active B2B Schemes</Text>
-          <Gift size={18} color={Theme.colors.accent} />
-        </View>
-        
-        <ScrollView 
-          horizontal 
-          showsHorizontalScrollIndicator={false} 
-          snapToInterval={width - 48}
-          decelerationRate="fast"
-          contentContainerStyle={styles.schemesScroll}
+        {/* Stats Cards */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.statsScrollContent}
+          style={styles.statsScroll}
         >
-          {schemes.map(scheme => (
-            <View key={scheme.id} style={styles.schemeCard}>
-              <View style={styles.schemeHeader}>
-                <Text style={styles.schemeTitle}>{scheme.title}</Text>
-                <Text style={styles.schemeDate}>{scheme.validity}</Text>
+          {statsCards.map((card, index) => (
+            <View key={index} style={[styles.statsCard, { borderLeftColor: card.borderColor }]}>
+              <View style={[styles.statsIconCircle, { backgroundColor: card.borderColor + '15' }]}>
+                <card.icon size={18} color={card.borderColor} />
               </View>
-              <Text style={styles.schemeDesc}>{scheme.desc}</Text>
-              <TouchableOpacity style={styles.schemeBtn}>
-                <Text style={styles.schemeBtnText}>Book Scheme Products</Text>
-                <ArrowRight size={14} color={Theme.colors.primary} />
-              </TouchableOpacity>
+              <Text style={styles.statsAmount}>{card.amount}</Text>
+              <Text style={styles.statsLabel}>{card.label}</Text>
             </View>
           ))}
         </ScrollView>
 
-        {/* Quick Categories */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Product Divisions</Text>
-          <TouchableOpacity onPress={() => navigation.navigate('Categories')}>
-            <Text style={styles.viewAllText}>View All</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.categoriesGrid}>
-          {categories.map((cat, idx) => (
-            <TouchableOpacity 
-              key={idx} 
-              style={styles.categoryCell}
-              onPress={() => navigation.navigate('ProductList', { category: cat.name })}
-            >
-              <View style={[styles.categoryIconCircle, { backgroundColor: cat.color }]}>
-                <Zap size={20} color={cat.textColor} />
+        {/* Quick Stats Grid */}
+        <View style={styles.sectionContainer}>
+          <View style={styles.quickStatsGrid}>
+            {quickStats.map((stat, index) => (
+              <View key={index} style={styles.quickStatCard}>
+                <View style={[styles.quickStatIcon, { backgroundColor: stat.bgColor }]}>
+                  <stat.icon size={18} color={stat.color} />
+                </View>
+                <Text style={styles.quickStatValue}>{stat.value}</Text>
+                <Text style={styles.quickStatLabel}>{stat.label}</Text>
               </View>
-              <Text style={styles.categoryCellLabel}>{cat.name}</Text>
-            </TouchableOpacity>
-          ))}
+            ))}
+          </View>
         </View>
 
-        {/* Brand partners */}
-        <Text style={styles.brandSectionTitle}>Authorized Distribution Brands</Text>
-        <FlatList
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          data={brands}
-          renderItem={({ item }) => (
-            <View style={styles.brandBadge}>
-              <Text style={styles.brandBadgeText}>{item}</Text>
-            </View>
-          )}
-          keyExtractor={(item) => item}
-          contentContainerStyle={styles.brandsList}
-        />
+        {/* Quick Actions */}
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionTitle}>Quick Actions</Text>
+          <View style={styles.quickActionsGrid}>
+            {quickActions.map((action, index) => (
+              <TouchableOpacity
+                key={index}
+                style={styles.quickActionItem}
+                onPress={action.onPress}
+                activeOpacity={0.7}
+              >
+                <View style={[styles.quickActionCircle, { backgroundColor: action.color }]}>
+                  <action.icon size={22} color={COLORS.white} />
+                </View>
+                <Text style={styles.quickActionLabel}>{action.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
 
-        <View style={styles.bottomDisclaimer}>
-          <Text style={styles.disclaimerText}>SAP ERP Ledger Sync Connection Secure</Text>
+        {/* Brand Partners */}
+        <View style={styles.sectionContainer}>
+          <View style={styles.brandHeader}>
+            <Text style={styles.sectionTitle}>Top Brands</Text>
+            <TouchableOpacity>
+              <Text style={styles.brandLink}>Shop by Brands &gt;</Text>
+            </TouchableOpacity>
+          </View>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.brandsScrollContent}
+          >
+            {brands.map((brand, index) => (
+              <TouchableOpacity key={index} style={styles.brandChip} activeOpacity={0.7}>
+                <Text style={styles.brandChipText}>{brand}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Theme.colors.bgMain,
+    backgroundColor: COLORS.bgMain,
   },
+
+  // Header
   header: {
-    backgroundColor: Theme.colors.primaryDark,
-    paddingHorizontal: 24,
-    paddingTop: 20,
-    paddingBottom: 24,
+    height: 56,
+    backgroundColor: COLORS.white,
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
   },
-  welcomeText: {
-    fontSize: 12,
-    color: '#90CAF9',
+  headerIconBtn: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
   },
-  dealerName: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: Theme.colors.white,
-    fontFamily: 'Poppins-Bold',
-    marginTop: 2,
+  headerCenter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
-  codeBadge: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    alignSelf: 'flex-start',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-    marginTop: 6,
+  logoCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: COLORS.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  codeText: {
+  logoText: {
+    color: COLORS.white,
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  headerTitleGroup: {
+    alignItems: 'flex-start',
+  },
+  headerTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: COLORS.primaryDark,
+    letterSpacing: 1,
+  },
+  headerSubtitle: {
     fontSize: 9,
-    fontWeight: 'bold',
-    color: Theme.colors.white,
-    letterSpacing: 0.5,
+    fontWeight: '600',
+    color: COLORS.textMuted,
+    letterSpacing: 2,
+    textTransform: 'uppercase',
   },
-  cartButton: {
+  notifBadge: {
+    position: 'absolute',
+    top: 4,
+    right: 2,
+    backgroundColor: '#EF4444',
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: COLORS.white,
+  },
+  notifBadgeText: {
+    color: COLORS.white,
+    fontSize: 9,
+    fontWeight: '700',
+  },
+
+  // ScrollView
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 100,
+  },
+
+  // Greeting Card
+  greetingCard: {
+    marginHorizontal: 16,
+    marginTop: 16,
+    backgroundColor: '#E8F0FE',
+    borderRadius: 16,
+    padding: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  greetingLeft: {
+    flex: 1,
+  },
+  greetingLabel: {
+    fontSize: 14,
+    color: COLORS.textMuted,
+    marginBottom: 4,
+  },
+  greetingName: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: COLORS.textDark,
+  },
+  avatar: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    justifyContent: 'center',
+    backgroundColor: COLORS.primary,
     alignItems: 'center',
-    position: 'relative',
-  },
-  cartBadge: {
-    position: 'absolute',
-    top: 4,
-    right: 4,
-    backgroundColor: Theme.colors.accent,
-    borderRadius: 10,
-    width: 18,
-    height: 18,
     justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: Theme.colors.primaryDark,
   },
-  cartBadgeText: {
-    fontSize: 9,
-    fontWeight: 'bold',
-    color: Theme.colors.white,
+  avatarText: {
+    color: COLORS.white,
+    fontSize: 18,
+    fontWeight: '700',
   },
-  scrollBody: {
-    paddingHorizontal: 24,
-    paddingTop: 20,
-    paddingBottom: 40,
+
+  // Stats Cards
+  statsScroll: {
+    marginTop: 16,
   },
-  kpiContainer: {
-    gap: 16,
-    marginBottom: 24,
+  statsScrollContent: {
+    paddingHorizontal: 16,
+    gap: 12,
   },
-  kpiCard: {
-    backgroundColor: Theme.colors.white,
-    borderRadius: Theme.radii.card,
-    padding: 18,
+  statsCard: {
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
+    padding: 16,
+    width: 180,
+    borderLeftWidth: 4,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    elevation: 2,
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 3,
   },
-  outstandingCard: {
-    borderLeftWidth: 4,
-    borderLeftColor: Theme.colors.error,
-  },
-  creditCard: {
-    borderLeftWidth: 4,
-    borderLeftColor: Theme.colors.success,
-  },
-  kpiHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  kpiIconWrapper: {
+  statsIconCircle: {
     width: 32,
     height: 32,
-    borderRadius: 10,
-    backgroundColor: 'rgba(211, 47, 47, 0.1)',
+    borderRadius: 16,
+    alignItems: 'center',
     justifyContent: 'center',
-    alignItems: 'center',
+    marginBottom: 10,
   },
-  kpiLabel: {
+  statsAmount: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: COLORS.textDark,
+    marginBottom: 4,
+  },
+  statsLabel: {
     fontSize: 12,
-    fontWeight: 'bold',
-    color: Theme.colors.textMuted,
+    color: COLORS.textMuted,
   },
-  kpiValue: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: Theme.colors.textDark,
-    fontFamily: 'monospace',
-    marginTop: 10,
-  },
-  progressBarBg: {
-    backgroundColor: '#F1F5F9',
-    height: 6,
-    borderRadius: 3,
-    marginTop: 12,
-    overflow: 'hidden',
-  },
-  progressBarFill: {
-    backgroundColor: Theme.colors.error,
-    height: '100%',
-  },
-  kpiFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  creditLimitText: {
-    fontSize: 11,
-    color: Theme.colors.textMuted,
-  },
-  payLink: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: Theme.colors.primary,
-  },
-  kpiSubText: {
-    fontSize: 11,
-    color: Theme.colors.textLight,
-    marginTop: 8,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-    marginTop: 8,
+
+  // Quick Stats
+  sectionContainer: {
+    paddingHorizontal: 16,
+    marginTop: 20,
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: Theme.colors.textDark,
-    fontFamily: 'Poppins-Bold',
-  },
-  viewAllText: {
-    fontSize: 12,
-    color: Theme.colors.primary,
-    fontWeight: '600',
-  },
-  schemesScroll: {
-    paddingBottom: 16,
-    gap: 16,
-  },
-  schemeCard: {
-    backgroundColor: Theme.colors.white,
-    borderWidth: 1,
-    borderColor: Theme.colors.border,
-    borderRadius: Theme.radii.card,
-    padding: 16,
-    width: width - 80,
-  },
-  schemeHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    gap: 8,
-  },
-  schemeTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: Theme.colors.textDark,
-    flex: 1,
-  },
-  schemeDate: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    color: Theme.colors.accent,
-    backgroundColor: 'rgba(255,152,0,0.1)',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-  },
-  schemeDesc: {
-    fontSize: 12,
-    color: Theme.colors.textMuted,
-    lineHeight: 18,
-    marginTop: 8,
+    fontWeight: '700',
+    color: COLORS.textDark,
     marginBottom: 12,
   },
-  schemeBtn: {
+  quickStatsGrid: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  quickStatCard: {
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
+    padding: 14,
+    width: (width - 44) / 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  quickStatIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: 'center',
-    gap: 6,
+    justifyContent: 'center',
+    marginBottom: 10,
   },
-  schemeBtnText: {
+  quickStatValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: COLORS.textDark,
+    marginBottom: 2,
+  },
+  quickStatLabel: {
     fontSize: 12,
-    fontWeight: 'bold',
-    color: Theme.colors.primary,
+    color: COLORS.textMuted,
   },
-  categoriesGrid: {
+
+  // Quick Actions
+  quickActionsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    gap: 12,
-    marginBottom: 24,
+    rowGap: 16,
   },
-  categoryCell: {
-    backgroundColor: Theme.colors.white,
-    borderWidth: 1,
-    borderColor: Theme.colors.border,
-    borderRadius: 16,
-    padding: 12,
-    width: (width - 64) / 3,
+  quickActionItem: {
+    width: (width - 32) / 3,
     alignItems: 'center',
-    gap: 8,
   },
-  categoryIconCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
+  quickActionCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
     justifyContent: 'center',
-    alignItems: 'center',
+    marginBottom: 8,
   },
-  categoryCellLabel: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    color: Theme.colors.textDark,
+  quickActionLabel: {
+    fontSize: 12,
+    color: COLORS.textDark,
+    fontWeight: '500',
     textAlign: 'center',
   },
-  brandSectionTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: Theme.colors.textMuted,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 10,
+
+  // Brand Partners
+  brandHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
   },
-  brandsList: {
-    gap: 10,
-    paddingBottom: 24,
-  },
-  brandBadge: {
-    backgroundColor: '#ECEFF1',
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#CFD8DC',
-  },
-  brandBadgeText: {
-    fontSize: 11,
-    color: Theme.colors.textDark,
+  brandLink: {
+    fontSize: 13,
+    color: COLORS.primaryLight,
     fontWeight: '600',
   },
-  bottomDisclaimer: {
-    alignItems: 'center',
-    marginTop: 10,
+  brandsScrollContent: {
+    gap: 10,
   },
-  disclaimerText: {
-    fontSize: 10,
-    color: Theme.colors.textLight,
-    fontWeight: 'bold',
-  }
+  brandChip: {
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: COLORS.white,
+  },
+  brandChipText: {
+    fontSize: 13,
+    color: COLORS.textDark,
+    fontWeight: '500',
+  },
 });
+
+export default HomeScreen;

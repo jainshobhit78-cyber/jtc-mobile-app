@@ -1,120 +1,172 @@
-import React, { useContext } from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, SafeAreaView, Alert } from 'react-native';
+import React from 'react';
+import {
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  TouchableOpacity,
+  SafeAreaView,
+  Alert,
+  StatusBar,
+} from 'react-native';
 import { Theme } from '../styles/theme';
-import { StateContext } from '../context/StateContext';
-import { User, Phone, Mail, MapPin, Receipt, Shield, RefreshCw, LogOut } from 'lucide-react-native';
+import {
+  Building2,
+  FileText,
+  CreditCard,
+  BarChart3,
+  Users,
+  Lock,
+  HelpCircle,
+  LogOut,
+  ChevronRight,
+} from 'lucide-react-native';
+
+const menuItems = [
+  {
+    icon: Building2,
+    label: 'Company Details',
+    iconColor: '#2563EB',
+    iconBg: '#DBEAFE',
+  },
+  {
+    icon: FileText,
+    label: 'GST & Documents',
+    iconColor: '#16A34A',
+    iconBg: '#DCFCE7',
+  },
+  {
+    icon: CreditCard,
+    label: 'Credit Limit',
+    iconColor: '#F5851F',
+    iconBg: '#FFF3E6',
+    rightText: '₹ 5,00,000',
+    route: 'Payments',
+  },
+  {
+    icon: BarChart3,
+    label: 'Account Summary',
+    iconColor: '#7C3AED',
+    iconBg: '#EDE9FE',
+    route: 'AccountSummary',
+  },
+  {
+    icon: Users,
+    label: 'Users & Staff',
+    iconColor: '#0D9488',
+    iconBg: '#CCFBF1',
+  },
+  {
+    icon: Lock,
+    label: 'Change Password',
+    iconColor: '#6B7280',
+    iconBg: '#F3F4F6',
+  },
+  {
+    icon: HelpCircle,
+    label: 'Help & Support',
+    iconColor: '#2563EB',
+    iconBg: '#DBEAFE',
+    route: 'Support',
+  },
+];
+
+const logoutItem = {
+  icon: LogOut,
+  label: 'Logout',
+  iconColor: '#DC2626',
+  iconBg: '#FEE2E2',
+  isLogout: true,
+};
 
 export default function ProfileScreen({ navigation }) {
-  const { user, resetDatabase } = useContext(StateContext);
-
-  const handleReset = () => {
+  const handleLogout = () => {
     Alert.alert(
-      "Reset B2B Data",
-      "Re-initialize databases to default values? This clears local storage.",
+      'Logout',
+      'Are you sure you want to logout from your account?',
       [
-        { text: "Cancel" },
-        { 
-          text: "Reset DB", 
-          onPress: async () => {
-            await resetDatabase();
-            Alert.alert("Database Reset", "Re-initialized local databases. Logging out.");
-            navigation.replace('Welcome');
-          }
-        }
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Logout',
+          style: 'destructive',
+          onPress: () => navigation.replace('Welcome'),
+        },
       ]
     );
   };
 
-  const handleLogout = () => {
-    Alert.alert(
-      "Sign Out",
-      "Are you sure you want to end your active B2B session?",
-      [
-        { text: "Cancel" },
-        { text: "Sign Out", onPress: () => navigation.replace('Welcome') }
-      ]
+  const renderMenuItem = (item, index, isLast = false) => {
+    const IconComponent = item.icon;
+    return (
+      <TouchableOpacity
+        key={index}
+        style={[
+          styles.menuItem,
+          !isLast && !item.isLogout && styles.menuItemBorder,
+        ]}
+        activeOpacity={0.6}
+        onPress={
+          item.isLogout
+            ? handleLogout
+            : item.route
+            ? () => navigation.navigate(item.route)
+            : undefined
+        }
+      >
+        <View style={styles.menuItemLeft}>
+          <View style={[styles.iconCircle, { backgroundColor: item.iconBg }]}>
+            <IconComponent size={18} color={item.iconColor} />
+          </View>
+          <Text
+            style={[
+              styles.menuItemLabel,
+              item.isLogout && { color: Theme.colors.error },
+            ]}
+          >
+            {item.label}
+          </Text>
+        </View>
+        <View style={styles.menuItemRight}>
+          {item.rightText && (
+            <Text style={styles.menuItemRightText}>{item.rightText}</Text>
+          )}
+          {!item.isLogout && (
+            <ChevronRight size={18} color={Theme.colors.textLight} />
+          )}
+        </View>
+      </TouchableOpacity>
     );
   };
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor={Theme.colors.primaryDark} />
+
+      {/* Dark Navy Header */}
       <View style={styles.header}>
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>SE</Text>
         </View>
-        <Text style={styles.name}>{user.name}</Text>
-        <Text style={styles.code}>DEALER CODE: {user.code}</Text>
+        <Text style={styles.name}>Sharma Electricals</Text>
+        <View style={styles.dealerBadge}>
+          <Text style={styles.dealerCode}>Dealer Code: JTCD00045</Text>
+        </View>
       </View>
 
-      <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
-        
-        {/* Registration details */}
-        <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>B2B Account Details</Text>
-          
-          <View style={styles.detailRow}>
-            <User size={16} color={Theme.colors.textMuted} />
-            <View>
-              <Text style={styles.label}>Proprietor / Owner</Text>
-              <Text style={styles.value}>{user.owner}</Text>
-            </View>
-          </View>
-
-          <View style={styles.detailRow}>
-            <Receipt size={16} color={Theme.colors.textMuted} />
-            <View>
-              <Text style={styles.label}>GSTIN Registration</Text>
-              <Text style={styles.value}>{user.gstin}</Text>
-            </View>
-          </View>
-
-          <View style={styles.detailRow}>
-            <Phone size={16} color={Theme.colors.textMuted} />
-            <View>
-              <Text style={styles.label}>Phone Number</Text>
-              <Text style={styles.value}>{user.phone}</Text>
-            </View>
-          </View>
-
-          <View style={styles.detailRow}>
-            <Mail size={16} color={Theme.colors.textMuted} />
-            <View>
-              <Text style={styles.label}>Email Address</Text>
-              <Text style={styles.value}>{user.email}</Text>
-            </View>
-          </View>
-
-          <View style={styles.detailRow}>
-            <MapPin size={16} color={Theme.colors.textMuted} />
-            <View>
-              <Text style={styles.label}>Billing Address</Text>
-              <Text style={styles.value}>{user.address}</Text>
-            </View>
-          </View>
+      <ScrollView
+        contentContainerStyle={styles.body}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Menu Card */}
+        <View style={styles.menuCard}>
+          {menuItems.map((item, index) =>
+            renderMenuItem(item, index, index === menuItems.length - 1)
+          )}
         </View>
 
-        {/* Configurations */}
-        <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>System Tools</Text>
-
-          <TouchableOpacity style={styles.toolBtn} onPress={handleReset}>
-            <View style={styles.toolBtnLeft}>
-              <RefreshCw size={16} color={Theme.colors.accent} />
-              <Text style={styles.toolBtnText}>Reset Local Storage Data</Text>
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.toolBtn} onPress={handleLogout}>
-            <View style={styles.toolBtnLeft}>
-              <LogOut size={16} color={Theme.colors.error} />
-              <Text style={[styles.toolBtnText, { color: Theme.colors.error }]}>End Session (Log Out)</Text>
-            </View>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.footer}>
-          <Shield size={14} color={Theme.colors.textLight} />
-          <Text style={styles.footerText}>JTC distribution portal console v2.0</Text>
+        {/* Logout Card */}
+        <View style={styles.menuCard}>
+          {renderMenuItem(logoutItem, 'logout', true)}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -129,8 +181,8 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: Theme.colors.primaryDark,
     paddingHorizontal: 24,
-    paddingTop: 30,
-    paddingBottom: 30,
+    paddingTop: 32,
+    paddingBottom: 32,
     alignItems: 'center',
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
@@ -148,90 +200,78 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: 'bold',
     color: Theme.colors.primary,
+    fontFamily: Theme.fonts.heading,
   },
   name: {
     fontSize: 18,
     fontWeight: 'bold',
     color: Theme.colors.white,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: Theme.fonts.heading,
   },
-  code: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    color: '#90CAF9',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-    marginTop: 6,
-    letterSpacing: 0.5,
+  dealerBadge: {
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 8,
+    marginTop: 8,
+  },
+  dealerCode: {
+    fontSize: 11,
+    color: 'rgba(255, 255, 255, 0.75)',
+    fontWeight: '600',
+    letterSpacing: 0.3,
   },
   body: {
-    padding: 24,
+    padding: 20,
     gap: 16,
-  },
-  sectionCard: {
-    backgroundColor: Theme.colors.white,
-    borderWidth: 1,
-    borderColor: Theme.colors.border,
-    borderRadius: Theme.radii.card,
-    padding: 18,
-  },
-  sectionTitle: {
-    fontSize: 13,
-    fontWeight: 'bold',
-    color: Theme.colors.textDark,
-    textTransform: 'uppercase',
-    marginBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: Theme.colors.bgMain,
-    paddingBottom: 8,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 14,
-    marginBottom: 16,
-  },
-  label: {
-    fontSize: 10,
-    color: Theme.colors.textMuted,
-    fontWeight: 'bold',
-    textTransform: 'uppercase',
-  },
-  value: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: Theme.colors.textDark,
-    marginTop: 2,
-    lineHeight: 18,
-  },
-  toolBtn: {
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: Theme.colors.bgMain,
-  },
-  toolBtnLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  toolBtnText: {
-    fontSize: 13,
-    fontWeight: 'bold',
-    color: Theme.colors.textDark,
-  },
-  footer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    marginTop: 10,
     paddingBottom: 40,
   },
-  footerText: {
-    fontSize: 10,
-    color: Theme.colors.textLight,
-    fontWeight: 'bold',
-  }
+  menuCard: {
+    backgroundColor: Theme.colors.white,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Theme.colors.border,
+    overflow: 'hidden',
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  menuItemBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: Theme.colors.borderLight,
+  },
+  menuItemLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    flex: 1,
+  },
+  iconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  menuItemLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Theme.colors.textDark,
+    fontFamily: Theme.fonts.bodySemiBold,
+  },
+  menuItemRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  menuItemRightText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: Theme.colors.textDark,
+    fontFamily: 'monospace',
+  },
 });

@@ -1,110 +1,201 @@
-import React, { useContext, useState } from 'react';
-import { StyleSheet, Text, View, FlatList, TouchableOpacity, SafeAreaView, Alert, Modal, ActivityIndicator } from 'react-native';
+import React, { useState } from 'react';
+import {
+  StyleSheet,
+  Text,
+  View,
+  FlatList,
+  TouchableOpacity,
+  SafeAreaView,
+  StatusBar,
+  TextInput,
+} from 'react-native';
 import { Theme } from '../styles/theme';
-import { StateContext } from '../context/StateContext';
-import { ChevronRight, FileText, CheckCircle2, AlertTriangle, ShieldCheck } from 'lucide-react-native';
+import {
+  Menu,
+  Bell,
+  Search,
+  SlidersHorizontal,
+  Download,
+  ChevronRight,
+} from 'lucide-react-native';
 
-export default function InvoicesScreen() {
-  const { invoices, payInvoice } = useContext(StateContext);
-  const [loadingInvoice, setLoadingInvoice] = useState(null);
+const tabs = ['Orders', 'Offers', 'Collections'];
 
-  const handlePayInvoice = (invoice) => {
-    Alert.alert(
-      "Confirm Payment",
-      `Authorize payment of ₹${invoice.amount.toLocaleString('en-IN')} for Invoice ${invoice.invoiceNo}?`,
-      [
-        { text: "Cancel" },
-        { 
-          text: "Confirm", 
-          onPress: () => {
-            setLoadingInvoice(invoice.invoiceNo);
-            // Simulate processing bank payment
-            setTimeout(() => {
-              payInvoice(invoice.invoiceNo);
-              setLoadingInvoice(null);
-              Alert.alert("Payment Cleared", `Invoice ${invoice.invoiceNo} successfully cleared. Balance updated in SAP ERP S/4HANA ledger.`);
-            }, 1500);
-          }
-        }
-      ]
+const invoicesData = [
+  {
+    id: 'INV245089',
+    customer: 'Sharma Electricals',
+    amount: '₹42,860',
+    status: 'Paid',
+    date: '14 May 2024',
+    dueDate: '28 May 2024',
+  },
+  {
+    id: 'INV245072',
+    customer: 'Gupta Enterprises',
+    amount: '₹31,240',
+    status: 'Pending',
+    date: '10 May 2024',
+    dueDate: '24 May 2024',
+  },
+  {
+    id: 'INV245058',
+    customer: 'Verma Traders',
+    amount: '₹18,750',
+    status: 'Paid',
+    date: '06 May 2024',
+    dueDate: '20 May 2024',
+  },
+  {
+    id: 'INV245041',
+    customer: 'Khandelwal & Sons',
+    amount: '₹9,560',
+    status: 'Overdue',
+    date: '28 Apr 2024',
+    dueDate: '12 May 2024',
+  },
+  {
+    id: 'INV245033',
+    customer: 'Agarwal Electricals',
+    amount: '₹15,680',
+    status: 'Paid',
+    date: '22 Apr 2024',
+    dueDate: '06 May 2024',
+  },
+];
+
+const getStatusStyle = (status) => {
+  switch (status) {
+    case 'Paid':
+      return { bg: Theme.colors.successBg, color: Theme.colors.success };
+    case 'Pending':
+      return { bg: Theme.colors.warningBg, color: Theme.colors.warning };
+    case 'Overdue':
+      return { bg: Theme.colors.errorBg, color: Theme.colors.error };
+    default:
+      return { bg: Theme.colors.infoBg, color: Theme.colors.info };
+  }
+};
+
+export default function InvoicesScreen({ navigation }) {
+  const [activeTab, setActiveTab] = useState('Orders');
+  const [searchText, setSearchText] = useState('');
+
+  const filteredInvoices = invoicesData.filter(
+    (inv) =>
+      inv.id.toLowerCase().includes(searchText.toLowerCase()) ||
+      inv.customer.toLowerCase().includes(searchText.toLowerCase())
+  );
+
+  const renderInvoiceCard = ({ item }) => {
+    const statusStyle = getStatusStyle(item.status);
+    return (
+      <View style={styles.card}>
+        {/* Top row: Invoice #, Date, Status */}
+        <View style={styles.cardTop}>
+          <View style={styles.cardTopLeft}>
+            <Text style={styles.invoiceId}>{item.id}</Text>
+            <Text style={styles.invoiceDate}>{item.date}</Text>
+          </View>
+          <View style={[styles.statusBadge, { backgroundColor: statusStyle.bg }]}>
+            <Text style={[styles.statusText, { color: statusStyle.color }]}>
+              {item.status}
+            </Text>
+          </View>
+        </View>
+
+        {/* Customer name & amount */}
+        <View style={styles.cardMiddle}>
+          <Text style={styles.customerName}>{item.customer}</Text>
+          <Text style={styles.amount}>{item.amount}</Text>
+        </View>
+
+        {/* Bottom: Due date & Download */}
+        <View style={styles.cardBottom}>
+          <Text style={styles.dueDate}>Due: {item.dueDate}</Text>
+          <TouchableOpacity style={styles.downloadLink} activeOpacity={0.6}>
+            <Download size={14} color={Theme.colors.primary} />
+            <Text style={styles.downloadText}>Download</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
     );
   };
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor={Theme.colors.white} />
+
+      {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>B2B Billing & Invoices</Text>
-        <Text style={styles.headerSubtitle}>Reconciled ledger from SAP ERP console</Text>
+        <TouchableOpacity activeOpacity={0.6} onPress={() => navigation.navigate('Profile')}>
+          <Menu size={24} color={Theme.colors.textDark} />
+        </TouchableOpacity>
+        <Text style={styles.logoText}>JTC</Text>
+        <TouchableOpacity style={styles.bellWrapper} activeOpacity={0.6} onPress={() => navigation.navigate('Notifications')}>
+          <Bell size={22} color={Theme.colors.textDark} />
+          <View style={styles.bellBadge}>
+            <Text style={styles.bellBadgeText}>3</Text>
+          </View>
+        </TouchableOpacity>
       </View>
 
+      {/* Title */}
+      <View style={styles.titleRow}>
+        <Text style={styles.title}>Invoices</Text>
+      </View>
+
+      {/* Tab Row */}
+      <View style={styles.tabRow}>
+        {tabs.map((tab) => (
+          <TouchableOpacity
+            key={tab}
+            style={[styles.tab, activeTab === tab && styles.tabActive]}
+            onPress={() => setActiveTab(tab)}
+            activeOpacity={0.7}
+          >
+            <Text
+              style={[
+                styles.tabText,
+                activeTab === tab && styles.tabTextActive,
+              ]}
+            >
+              {tab}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      {/* Search + Filter */}
+      <View style={styles.searchRow}>
+        <View style={styles.searchBar}>
+          <Search size={18} color={Theme.colors.textLight} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search invoices..."
+            placeholderTextColor={Theme.colors.textLight}
+            value={searchText}
+            onChangeText={setSearchText}
+          />
+        </View>
+        <TouchableOpacity style={styles.filterBtn} activeOpacity={0.7}>
+          <SlidersHorizontal size={18} color={Theme.colors.primary} />
+        </TouchableOpacity>
+      </View>
+
+      {/* Invoice List */}
       <FlatList
-        data={invoices}
-        keyExtractor={(item) => item.invoiceNo}
-        renderItem={({ item }) => (
-          <View style={styles.invoiceCard}>
-            <View style={styles.cardHeader}>
-              <View style={styles.invoiceMeta}>
-                <FileText size={18} color={Theme.colors.primary} />
-                <View>
-                  <Text style={styles.invoiceNo}>{item.invoiceNo}</Text>
-                  <Text style={styles.orderId}>Order: {item.orderId}</Text>
-                </View>
-              </View>
-              
-              <View style={[
-                styles.statusBadge,
-                item.status === 'Paid' ? styles.statusPaid : 
-                item.status === 'Unpaid' ? styles.statusUnpaid : styles.statusOverdue
-              ]}>
-                <Text style={[
-                  styles.statusText,
-                  item.status === 'Paid' ? styles.statusTextPaid : 
-                  item.status === 'Unpaid' ? styles.statusTextUnpaid : styles.statusTextOverdue
-                ]}>{item.status}</Text>
-              </View>
-            </View>
-
-            <View style={styles.cardBody}>
-              <View>
-                <Text style={styles.dateLabel}>Invoice Date</Text>
-                <Text style={styles.dateValue}>{item.date}</Text>
-              </View>
-              <View style={{ alignItems: 'flex-end' }}>
-                <Text style={styles.amountLabel}>Total Value</Text>
-                <Text style={styles.amountValue}>₹{item.amount.toLocaleString('en-IN')}</Text>
-              </View>
-            </View>
-
-            {item.status !== 'Paid' && (
-              <TouchableOpacity 
-                style={styles.payBtn}
-                onPress={() => handlePayInvoice(item)}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.payBtnText}>Clear Outstanding Dues</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        )}
+        data={filteredInvoices}
+        keyExtractor={(item) => item.id}
+        renderItem={renderInvoiceCard}
         contentContainerStyle={styles.listContainer}
-        ListFooterComponent={
-          <View style={styles.ledgerInfo}>
-            <ShieldCheck size={16} color={Theme.colors.success} />
-            <Text style={styles.ledgerInfoText}>Auto-Reconciliation Active via SAP Gateway</Text>
+        showsVerticalScrollIndicator={false}
+        ListEmptyComponent={
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyText}>No invoices found</Text>
           </View>
         }
       />
-
-      {/* Loading Modal */}
-      <Modal visible={loadingInvoice !== null} transparent animationType="fade">
-        <View style={styles.modalBg}>
-          <View style={styles.modalCard}>
-            <ActivityIndicator size="large" color={Theme.colors.primary} />
-            <Text style={styles.modalTitle}>Processing B2B Transfer...</Text>
-            <Text style={styles.modalDesc}>Posting ledger reconciliations to SAP ERP server</Text>
-          </View>
-        </View>
-      </Modal>
     </SafeAreaView>
   );
 }
@@ -115,157 +206,205 @@ const styles = StyleSheet.create({
     backgroundColor: Theme.colors.bgMain,
   },
   header: {
-    paddingHorizontal: 24,
-    paddingTop: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 12,
+    backgroundColor: Theme.colors.white,
+  },
+  logoText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: Theme.colors.primary,
+    fontFamily: Theme.fonts.heading,
+    letterSpacing: 1,
+  },
+  bellWrapper: {
+    position: 'relative',
+  },
+  bellBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -6,
+    backgroundColor: Theme.colors.error,
+    borderRadius: 8,
+    width: 16,
+    height: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: Theme.colors.white,
+  },
+  bellBadgeText: {
+    fontSize: 9,
+    fontWeight: 'bold',
+    color: Theme.colors.white,
+  },
+  titleRow: {
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 4,
+    backgroundColor: Theme.colors.white,
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: Theme.colors.textDark,
+    fontFamily: Theme.fonts.heading,
+  },
+  tabRow: {
+    flexDirection: 'row',
+    paddingHorizontal: 20,
+    paddingTop: 12,
     paddingBottom: 16,
     backgroundColor: Theme.colors.white,
+    gap: 8,
     borderBottomWidth: 1,
     borderBottomColor: Theme.colors.border,
   },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: Theme.colors.textDark,
-    fontFamily: 'Poppins-Bold',
+  tab: {
+    paddingHorizontal: 18,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: Theme.colors.bgMain,
   },
-  headerSubtitle: {
-    fontSize: 12,
+  tabActive: {
+    backgroundColor: Theme.colors.primary,
+  },
+  tabText: {
+    fontSize: 13,
+    fontWeight: '600',
     color: Theme.colors.textMuted,
-    marginTop: 2,
+  },
+  tabTextActive: {
+    color: Theme.colors.white,
+  },
+  searchRow: {
+    flexDirection: 'row',
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 8,
+    gap: 10,
+    alignItems: 'center',
+  },
+  searchBar: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Theme.colors.white,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: Theme.colors.border,
+    paddingHorizontal: 14,
+    height: 44,
+    gap: 10,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 14,
+    color: Theme.colors.textDark,
+    padding: 0,
+  },
+  filterBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 10,
+    backgroundColor: Theme.colors.white,
+    borderWidth: 1,
+    borderColor: Theme.colors.border,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   listContainer: {
-    padding: 24,
-    gap: 16,
+    padding: 20,
+    gap: 12,
+    paddingBottom: 40,
   },
-  invoiceCard: {
+  card: {
     backgroundColor: Theme.colors.white,
-    borderRadius: Theme.radii.card,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: Theme.colors.border,
     padding: 16,
-    gap: 14,
+    gap: 12,
   },
-  cardHeader: {
+  cardTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  invoiceMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
+  cardTopLeft: {
+    gap: 2,
   },
-  invoiceNo: {
+  invoiceId: {
     fontSize: 14,
     fontWeight: 'bold',
     color: Theme.colors.textDark,
     fontFamily: 'monospace',
   },
-  orderId: {
+  invoiceDate: {
     fontSize: 11,
     color: Theme.colors.textLight,
+    marginTop: 2,
   },
   statusBadge: {
-    paddingHorizontal: 8,
+    paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 6,
   },
-  statusPaid: {
-    backgroundColor: 'rgba(46, 125, 50, 0.1)',
-  },
-  statusUnpaid: {
-    backgroundColor: 'rgba(255, 152, 0, 0.1)',
-  },
-  statusOverdue: {
-    backgroundColor: 'rgba(211, 47, 47, 0.1)',
-  },
   statusText: {
-    fontSize: 9,
+    fontSize: 10,
     fontWeight: 'bold',
     textTransform: 'uppercase',
+    letterSpacing: 0.3,
   },
-  statusTextPaid: {
-    color: Theme.colors.success,
-  },
-  statusTextUnpaid: {
-    color: Theme.colors.warning,
-  },
-  statusTextOverdue: {
-    color: Theme.colors.error,
-  },
-  cardBody: {
+  cardMiddle: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
   },
-  dateLabel: {
-    fontSize: 11,
-    color: Theme.colors.textLight,
-  },
-  dateValue: {
-    fontSize: 12,
+  customerName: {
+    fontSize: 14,
     fontWeight: '600',
-    color: Theme.colors.textDark,
+    color: Theme.colors.textBody || Theme.colors.textDark,
+    flex: 1,
   },
-  amountLabel: {
-    fontSize: 11,
-    color: Theme.colors.textLight,
-  },
-  amountValue: {
+  amount: {
     fontSize: 16,
     fontWeight: 'bold',
     color: Theme.colors.textDark,
     fontFamily: 'monospace',
   },
-  payBtn: {
-    backgroundColor: Theme.colors.primary,
-    height: 40,
-    borderRadius: 10,
-    justifyContent: 'center',
+  cardBottom: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: Theme.colors.borderLight,
+    paddingTop: 10,
   },
-  payBtnText: {
-    color: Theme.colors.white,
-    fontSize: 13,
-    fontWeight: 'bold',
+  dueDate: {
+    fontSize: 12,
+    color: Theme.colors.textMuted,
   },
-  ledgerInfo: {
+  downloadLink: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
     gap: 6,
-    marginTop: 10,
-    paddingBottom: 40,
   },
-  ledgerInfoText: {
-    fontSize: 11,
-    fontWeight: 'bold',
+  downloadText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: Theme.colors.primary,
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  emptyText: {
+    fontSize: 14,
     color: Theme.colors.textMuted,
   },
-  modalBg: {
-    flex: 1,
-    backgroundColor: 'rgba(14, 35, 68, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-  },
-  modalCard: {
-    backgroundColor: Theme.colors.white,
-    borderRadius: Theme.radii.card,
-    padding: 24,
-    alignItems: 'center',
-    width: '100%',
-    maxWidth: 320,
-    gap: 12,
-  },
-  modalTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: Theme.colors.textDark,
-    marginTop: 8,
-  },
-  modalDesc: {
-    fontSize: 11,
-    color: Theme.colors.textMuted,
-    textAlign: 'center',
-  }
 });

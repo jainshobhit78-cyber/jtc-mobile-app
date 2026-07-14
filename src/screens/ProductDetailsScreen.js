@@ -1,370 +1,489 @@
-import React, { useContext, useState } from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, SafeAreaView, Alert } from 'react-native';
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  StatusBar,
+  SafeAreaView,
+} from 'react-native';
+import { ArrowLeft, Share2, Heart, Minus, Plus, ChevronDown } from 'lucide-react-native';
 import { Theme } from '../styles/theme';
-import { StateContext } from '../context/StateContext';
-import { ChevronLeft, ShoppingCart, Star, ShieldCheck, Truck, Plus, Minus } from 'lucide-react-native';
 
-export default function ProductDetailsScreen({ route, navigation }) {
-  const { productId } = route.params;
-  const { products, addToCart } = useContext(StateContext);
+const DEFAULT_PRODUCT = {
+  id: '1',
+  name: 'KEI FR PVC Copper Wire 1.5 Sqmm Blue',
+  price: 1420.0,
+  mrp: 1650.0,
+  unit: 'Roll',
+  stock: 250,
+  color: '#3B82F6',
+  initial: 'K',
+  brand: 'KEI',
+  sku: 'KEI-WR-1.5-BL',
+  category: 'Wires & Cables',
+  type: 'FR PVC',
+  size: '1.5 Sqmm',
+  length: '90m',
+};
 
-  const product = products.find(p => p.id === productId);
-  const [qty, setQty] = useState(1);
+const SPECS_KEYS = [
+  { label: 'Brand', key: 'brand' },
+  { label: 'SKU', key: 'sku' },
+  { label: 'Category', key: 'category' },
+  { label: 'Type', key: 'type' },
+  { label: 'Size', key: 'size' },
+  { label: 'Length', key: 'length' },
+];
 
-  if (!product) {
-    return (
-      <SafeAreaView style={styles.errorContainer}>
-        <Text style={styles.errorText}>Product not found.</Text>
-      </SafeAreaView>
-    );
-  }
+const ProductDetailsScreen = ({ navigation, route }) => {
+  const product = route?.params?.product || DEFAULT_PRODUCT;
+  const [quantity, setQuantity] = useState(1);
+  const [bookStock, setBookStock] = useState('24');
 
-  const handleAddToCart = () => {
-    addToCart(product, qty);
-    Alert.alert(
-      "Item Added",
-      `${qty} ${product.unit}(s) of ${product.name} added to cart.`,
-      [
-        { text: "Continue Booking" },
-        { text: "Open Cart", onPress: () => navigation.navigate('Cart') }
-      ]
-    );
-  };
+  const savings = product.mrp - product.price;
+  const savingsPercent = Math.round((savings / product.mrp) * 100);
 
-  // Mock specs based on product ID
-  const specs = [
-    { label: "Voltage Rating", value: product.category.includes("Wire") ? "1100V" : "230V / 415V" },
-    { label: "Material Type", value: product.brand.includes("KEI") || product.brand.includes("Polycab") ? "99.9% Electrolytic Copper" : "Standard Grade" },
-    { label: "Standard Length", value: product.unit },
-    { label: "Insulation Grade", value: product.category.includes("Wire") ? "FR PVC (Flame Retardant)" : "IP54 Protected" },
-    { label: "Product SKU", value: product.sku },
-    { label: "Compliance IS", value: "IS 694 : 2010" }
-  ];
+  const incrementQty = () => setQuantity((q) => q + 1);
+  const decrementQty = () => setQuantity((q) => (q > 1 ? q - 1 : 1));
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="dark-content" backgroundColor={Theme.colors.white} />
+
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <ChevronLeft size={20} color={Theme.colors.textDark} />
+        <TouchableOpacity
+          style={styles.headerBtn}
+          onPress={() => navigation.goBack()}
+          activeOpacity={0.7}
+        >
+          <ArrowLeft size={22} color={Theme.colors.textDark} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Technical Specs</Text>
-        <View style={{ width: 40 }} />
+        <View style={styles.headerRight}>
+          <TouchableOpacity style={styles.headerBtn} activeOpacity={0.7}>
+            <Share2 size={20} color={Theme.colors.textDark} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.headerBtn} activeOpacity={0.7}>
+            <Heart size={20} color={Theme.colors.textDark} />
+          </TouchableOpacity>
+        </View>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollBody} showsVerticalScrollIndicator={false}>
-        {/* Brand & Name */}
-        <View style={styles.card}>
-          <View style={styles.brandRow}>
-            <View style={styles.brandBadge}>
-              <Text style={styles.brandText}>{product.brand}</Text>
-            </View>
-            <View style={styles.ratingRow}>
-              <Star size={14} color={Theme.colors.accent} fill={Theme.colors.accent} />
-              <Text style={styles.ratingText}>{product.rating}</Text>
-            </View>
-          </View>
-          <Text style={styles.name}>{product.name}</Text>
-          <Text style={styles.categoryText}>{product.category} Division</Text>
-          
-          <View style={styles.priceRow}>
-            <Text style={styles.price}>₹{product.price.toLocaleString('en-IN')}</Text>
-            <Text style={styles.unitText}>per {product.unit}</Text>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Product Image Area */}
+        <View style={[styles.imageArea, { backgroundColor: product.color + '14' }]}>
+          <Text style={[styles.imageInitial, { color: product.color }]}>
+            {product.initial}
+          </Text>
+        </View>
+
+        {/* Product Info */}
+        <View style={styles.infoSection}>
+          <Text style={styles.productName}>{product.name}</Text>
+
+          {/* Brand · SKU · Category */}
+          <View style={styles.metaRow}>
+            <Text style={styles.metaText}>{product.brand}</Text>
+            <Text style={styles.metaDot}>·</Text>
+            <Text style={styles.metaText}>{product.sku}</Text>
+            <Text style={styles.metaDot}>·</Text>
+            <Text style={styles.metaText}>{product.category}</Text>
           </View>
 
+          {/* Price Section */}
+          <View style={styles.priceSection}>
+            <Text style={styles.mrpText}>
+              MRP ₹{product.mrp.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+            </Text>
+            <Text style={styles.priceText}>
+              ₹ {product.price.toLocaleString('en-IN', { minimumFractionDigits: 2 })} / {product.unit}
+            </Text>
+          </View>
+
+          {/* Savings Badge */}
+          <View style={styles.savingsBadge}>
+            <Text style={styles.savingsText}>
+              You Save ₹ {savings.toLocaleString('en-IN', { minimumFractionDigits: 2 })} ({savingsPercent}%)
+            </Text>
+          </View>
+
+          {/* Stock & Min Order */}
+          <Text style={styles.stockText}>
+            In Stock: {product.stock} {product.unit}
+          </Text>
+          <Text style={styles.minOrderText}>Min Order: 1 {product.unit}</Text>
+
+          {/* Divider */}
           <View style={styles.divider} />
 
-          {/* Delivery banner */}
-          <View style={styles.badgeRow}>
-            <View style={styles.badgeItem}>
-              <ShieldCheck size={16} color={Theme.colors.success} />
-              <Text style={styles.badgeLabel}>ISI Certified</Text>
-            </View>
-            <View style={styles.badgeItem}>
-              <Truck size={16} color={Theme.colors.primary} />
-              <Text style={styles.badgeLabel}>Standard Dispatch</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Quantity Stepper */}
-        <View style={styles.qtyCard}>
-          <Text style={styles.qtyTitle}>Specify Order Quantity</Text>
-          <View style={styles.stepperContainer}>
-            <TouchableOpacity 
-              style={styles.stepBtn}
-              onPress={() => setQty(Math.max(1, qty - 1))}
-            >
-              <Minus size={18} color={Theme.colors.textDark} />
-            </TouchableOpacity>
-            <Text style={styles.qtyValue}>{qty}</Text>
-            <TouchableOpacity 
-              style={styles.stepBtn}
-              onPress={() => setQty(qty + 1)}
-            >
-              <Plus size={18} color={Theme.colors.textDark} />
-            </TouchableOpacity>
-          </View>
-          <Text style={styles.totalLabel}>Total Value: <Text style={styles.totalValue}>₹{(product.price * qty).toLocaleString('en-IN')}</Text></Text>
-        </View>
-
-        {/* Specifications Table */}
-        <View style={styles.specsCard}>
-          <Text style={styles.specsTitle}>Technical Parameter Matrix</Text>
-          <View style={styles.table}>
-            {specs.map((spec, idx) => (
-              <View key={idx} style={[styles.tableRow, idx % 2 === 0 && styles.tableRowAlt]}>
-                <Text style={styles.tableCellLabel}>{spec.label}</Text>
-                <Text style={styles.tableCellValue}>{spec.value}</Text>
+          {/* Product Specifications */}
+          <Text style={styles.sectionTitle}>Product Specifications</Text>
+          <View style={styles.specsTable}>
+            {SPECS_KEYS.map((spec, index) => (
+              <View
+                key={spec.key}
+                style={[
+                  styles.specRow,
+                  index % 2 === 0 && styles.specRowAlt,
+                ]}
+              >
+                <Text style={styles.specLabel}>{spec.label}</Text>
+                <Text style={styles.specValue}>{product[spec.key] || '—'}</Text>
               </View>
             ))}
           </View>
-        </View>
+          <TouchableOpacity style={styles.viewMoreBtn} activeOpacity={0.7}>
+            <Text style={styles.viewMoreText}>View More</Text>
+          </TouchableOpacity>
 
+          {/* Divider */}
+          <View style={styles.divider} />
+
+          {/* Book Stock */}
+          <Text style={styles.sectionTitle}>Book Stock for:</Text>
+          <View style={styles.toggleRow}>
+            <TouchableOpacity
+              style={[
+                styles.toggleBtn,
+                bookStock === '24' && styles.toggleBtnActive,
+              ]}
+              onPress={() => setBookStock('24')}
+              activeOpacity={0.7}
+            >
+              <Text
+                style={[
+                  styles.toggleBtnText,
+                  bookStock === '24' && styles.toggleBtnTextActive,
+                ]}
+              >
+                24 Hours
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.toggleBtn,
+                bookStock === '48' && styles.toggleBtnActive,
+              ]}
+              onPress={() => setBookStock('48')}
+              activeOpacity={0.7}
+            >
+              <Text
+                style={[
+                  styles.toggleBtnText,
+                  bookStock === '48' && styles.toggleBtnTextActive,
+                ]}
+              >
+                48 Hours
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Quantity Stepper */}
+          <View style={styles.quantitySection}>
+            <Text style={styles.quantityLabel}>Quantity:</Text>
+            <View style={styles.stepper}>
+              <TouchableOpacity
+                style={styles.stepperBtn}
+                onPress={decrementQty}
+                activeOpacity={0.7}
+              >
+                <Minus size={16} color={Theme.colors.primary} />
+              </TouchableOpacity>
+              <View style={styles.stepperValue}>
+                <Text style={styles.stepperValueText}>{quantity}</Text>
+              </View>
+              <TouchableOpacity
+                style={styles.stepperBtn}
+                onPress={incrementQty}
+                activeOpacity={0.7}
+              >
+                <Plus size={16} color={Theme.colors.primary} />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
       </ScrollView>
 
-      {/* Fixed bottom checkout button */}
+      {/* Bottom Bar */}
       <View style={styles.bottomBar}>
-        <TouchableOpacity style={styles.addCartBtn} onPress={handleAddToCart}>
-          <ShoppingCart size={20} color={Theme.colors.white} style={{ marginRight: 8 }} />
-          <Text style={styles.addCartText}>Add to B2B Booking Cart</Text>
+        <TouchableOpacity style={styles.btnOutline} activeOpacity={0.7} onPress={() => navigation.navigate('Cart')}>
+          <Text style={styles.btnOutlineText}>Add to Cart</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.btnFilled} activeOpacity={0.7} onPress={() => navigation.navigate('Cart')}>
+          <Text style={styles.btnFilledText}>Buy Now</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
     backgroundColor: Theme.colors.bgMain,
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  errorText: {
-    color: Theme.colors.error,
-    fontSize: 16,
   },
   header: {
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     backgroundColor: Theme.colors.white,
+    paddingHorizontal: Theme.spacing.lg,
+    paddingVertical: Theme.spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: Theme.colors.border,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
   },
-  backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: Theme.colors.bgMain,
+  headerBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
     justifyContent: 'center',
-    alignItems: 'center',
   },
-  headerTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: Theme.colors.textDark,
-    fontFamily: 'Poppins-Bold',
-  },
-  scrollBody: {
-    padding: 24,
-    gap: 16,
-    paddingBottom: 100,
-  },
-  card: {
-    backgroundColor: Theme.colors.white,
-    borderWidth: 1,
-    borderColor: Theme.colors.border,
-    borderRadius: Theme.radii.card,
-    padding: 20,
-  },
-  brandRow: {
+  headerRight: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  brandBadge: {
-    backgroundColor: '#ECEFF1',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-  },
-  brandText: {
-    fontSize: 9,
-    fontWeight: 'bold',
-    color: Theme.colors.textMuted,
-  },
-  ratingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
     gap: 4,
   },
-  ratingText: {
-    fontSize: 12,
-    fontWeight: 'bold',
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 100,
+  },
+  imageArea: {
+    height: 250,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  imageInitial: {
+    fontSize: 72,
+    fontFamily: Theme.fonts.heading,
+  },
+  infoSection: {
+    backgroundColor: Theme.colors.white,
+    paddingHorizontal: Theme.spacing.lg,
+    paddingTop: Theme.spacing.xl,
+    paddingBottom: Theme.spacing.lg,
+  },
+  productName: {
+    fontSize: Theme.fontSize.xl,
+    fontFamily: Theme.fonts.bodyBold,
     color: Theme.colors.textDark,
+    lineHeight: 26,
+    marginBottom: Theme.spacing.sm,
   },
-  name: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: Theme.colors.textDark,
-    marginTop: 10,
-    lineHeight: 24,
-  },
-  categoryText: {
-    fontSize: 11,
-    color: Theme.colors.textLight,
-    marginTop: 2,
-    fontWeight: 'bold',
-  },
-  priceRow: {
+  metaRow: {
     flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: 6,
-    marginTop: 16,
+    alignItems: 'center',
+    marginBottom: Theme.spacing.lg,
+    flexWrap: 'wrap',
   },
-  price: {
-    fontSize: 24,
-    fontWeight: 'bold',
+  metaText: {
+    fontSize: Theme.fontSize.sm,
+    fontFamily: Theme.fonts.body,
+    color: Theme.colors.textMuted,
+  },
+  metaDot: {
+    fontSize: Theme.fontSize.sm,
+    color: Theme.colors.textMuted,
+    marginHorizontal: 6,
+  },
+  priceSection: {
+    marginBottom: Theme.spacing.sm,
+  },
+  mrpText: {
+    fontSize: Theme.fontSize.sm,
+    fontFamily: Theme.fonts.body,
+    color: Theme.colors.textMuted,
+    textDecorationLine: 'line-through',
+    marginBottom: 4,
+  },
+  priceText: {
+    fontSize: 20,
+    fontFamily: Theme.fonts.bodyBold,
     color: Theme.colors.primary,
   },
-  unitText: {
-    fontSize: 12,
+  savingsBadge: {
+    backgroundColor: Theme.colors.successBg,
+    alignSelf: 'flex-start',
+    paddingHorizontal: Theme.spacing.md,
+    paddingVertical: 4,
+    borderRadius: Theme.radii.badge,
+    marginBottom: Theme.spacing.md,
+    marginTop: Theme.spacing.sm,
+  },
+  savingsText: {
+    fontSize: Theme.fontSize.sm,
+    fontFamily: Theme.fonts.bodySemiBold,
+    color: Theme.colors.success,
+  },
+  stockText: {
+    fontSize: Theme.fontSize.md,
+    fontFamily: Theme.fonts.bodyMedium,
+    color: Theme.colors.success,
+    marginBottom: 4,
+  },
+  minOrderText: {
+    fontSize: Theme.fontSize.sm,
+    fontFamily: Theme.fonts.body,
     color: Theme.colors.textMuted,
   },
   divider: {
     height: 1,
     backgroundColor: Theme.colors.border,
-    marginVertical: 16,
+    marginVertical: Theme.spacing.xl,
   },
-  badgeRow: {
-    flexDirection: 'row',
-    gap: 20,
-  },
-  badgeItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  badgeLabel: {
-    fontSize: 12,
-    fontWeight: '600',
+  sectionTitle: {
+    fontSize: Theme.fontSize.lg,
+    fontFamily: Theme.fonts.bodyBold,
     color: Theme.colors.textDark,
+    marginBottom: Theme.spacing.md,
   },
-  qtyCard: {
-    backgroundColor: Theme.colors.white,
-    borderWidth: 1,
-    borderColor: Theme.colors.border,
-    borderRadius: Theme.radii.card,
-    padding: 20,
-    alignItems: 'center',
-  },
-  qtyTitle: {
-    fontSize: 13,
-    fontWeight: 'bold',
-    color: Theme.colors.textMuted,
-    textTransform: 'uppercase',
-  },
-  stepperContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 24,
-    marginVertical: 14,
-  },
-  stepBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    backgroundColor: Theme.colors.bgMain,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Theme.colors.border,
-  },
-  qtyValue: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: Theme.colors.textDark,
-    minWidth: 40,
-    textAlign: 'center',
-  },
-  totalLabel: {
-    fontSize: 12,
-    color: Theme.colors.textMuted,
-  },
-  totalValue: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: Theme.colors.primary,
-  },
-  specsCard: {
-    backgroundColor: Theme.colors.white,
-    borderWidth: 1,
-    borderColor: Theme.colors.border,
-    borderRadius: Theme.radii.card,
-    padding: 20,
-  },
-  specsTitle: {
-    fontSize: 13,
-    fontWeight: 'bold',
-    color: Theme.colors.textDark,
-    textTransform: 'uppercase',
-    marginBottom: 14,
-  },
-  table: {
-    borderWidth: 1,
-    borderColor: Theme.colors.border,
-    borderRadius: 12,
+  specsTable: {
+    borderRadius: Theme.radii.md,
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: Theme.colors.border,
   },
-  tableRow: {
+  specRow: {
     flexDirection: 'row',
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    justifyContent: 'space-between',
+    paddingHorizontal: Theme.spacing.md,
+    paddingVertical: Theme.spacing.md,
   },
-  tableRowAlt: {
-    backgroundColor: '#F8FAFC',
+  specRowAlt: {
+    backgroundColor: Theme.colors.bgMain,
   },
-  tableCellLabel: {
-    fontSize: 12,
-    fontWeight: 'bold',
+  specLabel: {
+    flex: 1,
+    fontSize: Theme.fontSize.sm,
+    fontFamily: Theme.fonts.bodyMedium,
     color: Theme.colors.textMuted,
   },
-  tableCellValue: {
-    fontSize: 12,
-    fontWeight: '600',
+  specValue: {
+    flex: 1,
+    fontSize: Theme.fontSize.sm,
+    fontFamily: Theme.fonts.bodySemiBold,
     color: Theme.colors.textDark,
     textAlign: 'right',
   },
-  bottomBar: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
+  viewMoreBtn: {
+    marginTop: Theme.spacing.md,
+  },
+  viewMoreText: {
+    fontSize: Theme.fontSize.md,
+    fontFamily: Theme.fonts.bodySemiBold,
+    color: Theme.colors.primaryLight,
+  },
+  toggleRow: {
+    flexDirection: 'row',
+    gap: Theme.spacing.md,
+    marginBottom: Theme.spacing.xl,
+  },
+  toggleBtn: {
+    flex: 1,
+    paddingVertical: Theme.spacing.md,
+    borderRadius: Theme.radii.button,
+    borderWidth: 1.5,
+    borderColor: Theme.colors.border,
+    alignItems: 'center',
     backgroundColor: Theme.colors.white,
-    padding: 16,
+  },
+  toggleBtnActive: {
+    borderColor: Theme.colors.primary,
+    backgroundColor: Theme.colors.primarySoft,
+  },
+  toggleBtnText: {
+    fontSize: Theme.fontSize.md,
+    fontFamily: Theme.fonts.bodyMedium,
+    color: Theme.colors.textMuted,
+  },
+  toggleBtnTextActive: {
+    color: Theme.colors.primary,
+    fontFamily: Theme.fonts.bodySemiBold,
+  },
+  quantitySection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  quantityLabel: {
+    fontSize: Theme.fontSize.md,
+    fontFamily: Theme.fonts.bodyMedium,
+    color: Theme.colors.textDark,
+  },
+  stepper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Theme.colors.border,
+    borderRadius: Theme.radii.button,
+    overflow: 'hidden',
+  },
+  stepperBtn: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Theme.colors.bgMain,
+  },
+  stepperValue: {
+    width: 48,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Theme.colors.white,
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
+    borderColor: Theme.colors.border,
+  },
+  stepperValueText: {
+    fontSize: Theme.fontSize.lg,
+    fontFamily: Theme.fonts.bodySemiBold,
+    color: Theme.colors.textDark,
+  },
+  bottomBar: {
+    flexDirection: 'row',
+    backgroundColor: Theme.colors.white,
+    paddingHorizontal: Theme.spacing.lg,
+    paddingVertical: Theme.spacing.lg,
+    gap: Theme.spacing.md,
     borderTopWidth: 1,
     borderTopColor: Theme.colors.border,
+    ...Theme.shadows.cardMd,
   },
-  addCartBtn: {
-    backgroundColor: Theme.colors.primary,
-    height: 52,
+  btnOutline: {
+    flex: 1,
+    height: 50,
     borderRadius: Theme.radii.button,
-    flexDirection: 'row',
-    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: Theme.colors.primary,
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  addCartText: {
-    color: Theme.colors.white,
-    fontSize: 15,
-    fontWeight: 'bold',
-  }
+  btnOutlineText: {
+    fontSize: Theme.fontSize.lg,
+    fontFamily: Theme.fonts.bodySemiBold,
+    color: Theme.colors.primary,
+  },
+  btnFilled: {
+    flex: 1,
+    height: 50,
+    borderRadius: Theme.radii.button,
+    backgroundColor: Theme.colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...Theme.shadows.button,
+  },
+  btnFilledText: {
+    fontSize: Theme.fontSize.lg,
+    fontFamily: Theme.fonts.bodySemiBold,
+    color: Theme.colors.textWhite,
+  },
 });
+
+export default ProductDetailsScreen;
